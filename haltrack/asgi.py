@@ -15,3 +15,5 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'haltrack.settings')
 
 application = get_asgi_application()
 
+
+app = application
