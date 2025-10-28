@@ -1,0 +1,117 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+
+<!-- Page header di luar card, sama seperti template 'Data supplier' -->
+<div class="page-header">
+  <h1 class="page-title">Data produk-supplier</h1>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'read_prodsup' %}">Data produk-supplier</a></li>
+      {% if manufaktur %}
+      <li class="breadcrumb-item active" aria-current="page">
+        <a class="text-muted" href="{% url 'create_prodsup' %}">Create produk-supplier</a>
+      </li>
+      {% endif %}
+    </ol>
+  </nav>
+</div>
+
+<div class="row">
+  <div class="col-lg-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+
+        <!-- Filter form ditempatkan di bagian atas card-body -->
+        <form method="get" class="forms-sample mb-4">
+          <div class="row align-items-end g-2">
+            <div class="col-md-4">
+              <label for="manufaktur" class="form-label">UMKM</label>
+              <select name="manufaktur" id="manufaktur" class="form-control">
+                {% for i in manufakturobj %}
+                  <option value="{{ i.username }}" {% if manufaktur == i.username %}selected{% endif %}>
+                    {{ i.nama_usaha }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-8 d-flex gap-2">
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="mdi mdi-check"></i> Submit
+              </button>
+              <a href="{% url 'read_prodsup' %}" class="btn btn-secondary btn-sm">
+                <i class="mdi mdi-refresh"></i> Clear
+              </a>
+            </div>
+          </div>
+        </form>
+
+        <!-- Table -->
+        <div class="table-responsive mt-2">
+          <table class="table table-bordered" id="tabel">
+            <thead class="table-light">
+              <tr>
+                <th class="text-center">No</th>
+                <th class="text-center">Produk</th>
+                <th class="text-center">Supplier</th>
+                <th class="text-center">Peran</th>
+                <th class="text-center">Catatan</th>
+                
+                <th class="text-center">Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for item in produk_supplierobj %}
+                <tr>
+                  <td class="text-center">{{ forloop.counter }}</td>
+                  <td class="text-center">{{ item.0.id_produk.nama_produk }}</td>
+
+                  <td class="text-center">
+                    {% for item2 in item.1 %}
+                      <ul class="mb-1"><li>{{ item2.id_supplier.nama_supplier }}</li></ul>
+                    {% endfor %}
+                  </td>
+
+                  <td class="text-center">
+                    {% for item2 in item.1 %}
+                      <ul class="mb-1"><li>{{ item2.peran_supplier }}</li></ul>
+                    {% endfor %}
+                  </td>
+
+                  <td class="text-center">
+                    {% for item2 in item.1 %}
+                      <ul class="mb-1"><li>{{ item2.catatan_rantai_pasok }}</li></ul>
+                    {% endfor %}
+                  </td>
+
+                  <td class="text-center">
+                    {% for item2 in item.1 %}
+                      <ul class="mb-1">
+                        <li>
+                          <a href="{% url 'update_prodsup' item2.id_detail_produk_supplier %}">
+                            <button class="btn btn-inverse-warning btn-sm btn-icon-text">Update</button>
+                          </a>
+                        </li>
+                          {% if manufaktur %}
+                        <li class="mt-1">
+                          <a href="{% url 'delete_prodsup' item2.id_detail_produk_supplier %}">
+                            <button class="btn btn-inverse-danger btn-sm btn-icon-text">Delete</button>
+                          </a>
+                        </li>
+                        {% endif %}
+                      </ul>
+                    {% endfor %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+      </div> <!-- /.card-body -->
+    </div>   <!-- /.card -->
+  </div>     <!-- /.col -->
+</div>       <!-- /.row -->
+
+{% endblock content %}

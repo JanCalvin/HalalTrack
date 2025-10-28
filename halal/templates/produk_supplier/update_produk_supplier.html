@@ -1,0 +1,69 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<div class="col-md-12 grid-margin stretch-card">
+    <div class="card">
+        <div class="card-body">
+         <div class="d-flex justify-content-between mb-4">
+                    <h4 class="card-title text-center">Update Produk-Supplier</h4>
+                    <a href="{% url 'read_prodsup' %}" class="btn btn-primary btn-sm">
+                        <i class="mdi mdi-view-list"></i> Read Produk-Supplier
+                    </a>
+                </div>
+            
+            <form class="forms-sample" method="POST">
+                {% csrf_token %}
+
+                 <div class="form-group row">
+                                <label class="col-sm-3 col-form-label" for="id_produk">Produk</label>
+                                <div class="col-sm-9">
+                                    <select name="id_produk" class="form-control" required>
+                                        {% for item in produkobj %}
+                                        <option value="{{ item.id_produk }}" {% if item.id_produk == detailobj.id_produk.id_produk %} selected {% endif %}>{{ item.nama_produk }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                    </div>
+
+               
+                <br>
+    
+                <div class="form-group row">
+                    <label for="id_supplier" class="col-sm-3 col-form-label">Supplier</label>
+                    <div class="col-sm-9 mt-2">
+                        <select name="id_supplier" id="id_supplier" class="form-control" required>
+                            {% for item in supplierobj %}
+                            <option value="{{ item.id_supplier }}" {% if item.id_supplier == detailobj.id_supplier.id_supplier %}selected{% endif %}>
+                                {{ item.nama_supplier }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <br>
+                <!-- Harga Beli -->
+                <div class="form-group row">
+                    <label for="peran_supplier" class="col-sm-3 col-form-label">Peran</label>
+                    <div class="col-sm-9">
+                        <input type="text" name="peran_supplier" id="peran_supplier" class="form-control"
+                               value="{{ detailobj.peran_supplier }}" required>
+                    </div>
+                </div>
+                <br>
+                <!-- Jumlah Bahan -->
+                <div class="form-group row">
+                    <label for="catatan_rantai_pasok" class="col-sm-3 col-form-label">Catatan </label>
+                    <div class="col-sm-9">
+                        <input type="text" name="catatan_rantai_pasok" id="catatan_rantai_pasok" class="form-control"
+                           value="{{ detailobj.catatan_rantai_pasok }}" required>
+                    </div>
+                </div>
+                <br>
+               
+                <!-- Buttons -->
+                <button type="submit" class="btn btn-primary me-2">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}

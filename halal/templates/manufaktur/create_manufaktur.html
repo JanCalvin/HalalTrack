@@ -1,0 +1,109 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Add Data</h1>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item active " aria-current="page" ><a class="text-muted" href="{% url 'read_manufaktur' %}">Data manufaktur</a></li>
+          <li class="breadcrumb-item " ><a  href="{% url 'create_manufaktur' %}">Create manufaktur</a></li>
+        </ol>
+      </nav>
+</div>
+<div class="row">
+    
+    <div class="col-lg-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+    
+                <form class="form-sample" method="post">
+                    {% csrf_token %}
+                    {% if is_admin %}
+                    <div class="form-group row">
+                        <label for="id_lph_admin"  class="col-sm-3 col-form-label">Admin</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="id_lph_admin" id="id_lph_admin" class="form-control" value="{{request.user.username}}" readonly>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="form-group row">
+                        <label for="id_lph_auditor"  class="col-sm-3 col-form-label">Auditor</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="id_lph_auditor" id="id_lph_auditor" class="form-control" value="{{request.user.username}}" readonly>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="form-group row">
+                        <label for="nama_usaha"  class="col-sm-3 col-form-label">Nama Manufaktur</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="nama_usaha" id="nama_usaha" class="form-control" placeholder="Nama Manufaktur" required>
+                        </div>
+                    </div>
+            
+                    <div class="form-group row">
+                        <label for="alamat"  class="col-sm-3 col-form-label">Alamat</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="alamat" id="alamat" placeholder="Alamat manufaktur" class="form-control" required>
+                        </div>
+                    </div>
+            
+                    <div class="form-group row">
+                        <label for="jenis_produk"  class="col-sm-3 col-form-label">Jenis Produk</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="jenis_produk" id="jenis_produk" placeholder="Jenis Produk" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group row">
+                        <label for="status_halal" class="col-sm-3 col-form-label">Status Halal</label>
+                        <div class="col-sm-9">
+                            <select class="form-control" name="status_halal" id="status_halal" required>
+                                <option value="True">Halal</option>
+                                <option value="False">Tidak Halal</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="contact"  class="col-sm-3 col-form-label">Kontak Manufaktur</label>
+                        <div class="col-sm-9">
+                            <input  type="number" name="contact" id="contact" placeholder="Kontak Manufaktur" class="form-control"   required>
+                        </div>
+                    </div>
+            
+                    <div class="form-group row">
+                        <label for="catatan_regis"  class="col-sm-3 col-form-label">Catatan Regis</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="catatan_regis" id="catatan_regis"  class="form-control" required>
+                        </div>
+                    </div>
+                    <h3 class="page-title">Data Akun</h3>
+                        <div class="form-group row">
+                        <label for="email"  class="col-sm-3 col-form-label">Email</label>
+                        <div class="col-sm-9">
+                            <input type="email" name="email" id="email" class="form-control"required>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="username"  class="col-sm-3 col-form-label">Username</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="username" id="username"class="form-control" required>
+                        </div>
+                    </div>
+                    
+                
+
+                    <div class="form-group row">
+                        <label for="password"  class="col-sm-3 col-form-label">Password</label>
+                        <div class="col-sm-9">
+                            <input type="password" name="password" id="password"class="form-control" required>
+                        </div>
+                    </div>
+                         
+                    
+                    <button type="submit"class="btn btn-primary mr-2">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <a href="{% url 'read_prodsup' %}" class="btn btn-primary btn-sm mb-3">
+                    <i class="mdi mdi-view-list"></i> Read Produk-Supplier
+                </a>
+
+                <form method="post" class="forms-sample">
+                    {% csrf_token %}
+                    <h3>Produk-Supplier</h3>
+
+                   <div class="form-group row">
+                                <label class="col-sm-3 col-form-label" for="id_produk">Produk</label>
+                                <div class="col-sm-9">
+                                    <select name="id_produk" class="form-control" required>
+                                        {% for item in produkobj %}
+                                        <option value="{{ item.id_produk }}">{{ item.nama_produk }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                    </div>
+                  
+
+                  
+                    
+                
+                    <br>
+                    <button type="button" class="btn btn-success btn-sm mb-3" onclick="tambahproduk_supplier()">
+                        <i class="mdi mdi-plus"></i> Tambah Detail
+                    </button>
+
+                    <div id="tambahdetail" class="mt-3">
+                        <div class="detail-row mb-4" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #3C3C3CFF;">
+                            <h3>Detail Produk-Supplier </h3>
+
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label" for="id_supplier">Nama Supplier</label>
+                                <div class="col-sm-9">
+                                    <select name="id_supplier" class="form-control" required>
+                                        {% for item in supplierobj %}
+                                        <option value="{{ item.id_supplier }}">{{ item.nama_supplier }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label" for="peran_supplier">Peran</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="peran_supplier" id="peran_supplier" class="form-control" >
+                                </div>
+                            </div>
+                            <br>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label" for="catatan_rantai_pasok">Catatan </label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="catatan_rantai_pasok" class="form-control" required >
+                                </div>
+                            </div>
+                            <br>
+                            <br>
+            
+                                    <button class="btn btn-danger btn-sm" type="button" onclick="deleterow(this)">Delete</button>
+                              
+                        </div>
+                    </div>
+
+                    <br>
+            
+                    <button class="btn btn-primary btn-sm" type="submit">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+
+<script>
+    
+    function tambahproduk_supplier() {
+        const rows = document.querySelectorAll('#tambahdetail .detail-row');
+        const angka = rows.length + 1;
+
+        const baris = document.createElement('div');
+        baris.className = 'detail-row mb-4';
+        baris.style.maxHeight = '300px';
+        baris.style.overflowY = 'auto';
+        baris.style.border = '1px solid #ddd';
+        baris.style.padding = '15px';
+        baris.style.borderRadius = '8px';
+        baris.style.background = '#3C3C3CFF';
+
+        baris.innerHTML = `
+            <h3>Detail Produk-Supplier 1</h3>
+
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label" for="id_supplier">Nama Supplier</label>
+                                <div class="col-sm-9">
+                                    <select name="id_supplier" class="form-control" required>
+                                        {% for item in supplierobj %}
+                                        <option value="{{ item.id_supplier }}">{{ item.nama_supplier }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label" for="peran_supplier">Peran</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="peran_supplier" id="peran_supplier" class="form-control" >
+                                </div>
+                            </div>
+                            <br>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label" for="catatan_rantai_pasok">Catatan </label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="catatan_rantai_pasok" class="form-control" required >
+                                </div>
+                            </div>
+                            <br>
+                            <br>
+            
+                                    <button class="btn btn-danger btn-sm" type="button" onclick="deleterow(this)">Delete</button>
+                      
+            
+
+                              
+        `;
+
+        document.getElementById('tambahdetail').appendChild(baris);
+        updateRowNumbers();
+    }
+
+    function deleterow(button) {
+        button.closest('.detail-row').remove();
+        updateRowNumbers();
+        hitungTotalHarga();
+    }
+
+    function updateRowNumbers() {
+        const rows = document.querySelectorAll('#tambahdetail .detail-row');
+        rows.forEach((row, index) => {
+            const title = row.querySelector('h3');
+            title.textContent = `Detail Produk-Supplier ${index + 1}`;
+        });
+    }
+
+
+</script>
+
+
+{% endblock scripts %}

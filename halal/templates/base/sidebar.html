@@ -1,0 +1,242 @@
+{% load static %}
+
+<nav class="sidebar sidebar-offcanvas" id="sidebar">
+    <div class="sidebar-brand-wrapper d-none d-lg-flex align-items-center mt-2 justify-content-center fixed-top">
+  
+      <a class="sidebar-brand brand-logo text-success display-1 " style="text-decoration: none;" href="#"><h3>HalTrack</h3></a>
+      <a class="sidebar-brand brand-logo-mini text-success display-1" style="text-decoration: none;" href="#"><h3>HT</h3>
+
+    </div>
+    <ul class="nav">
+      
+     
+      <li class="nav-item menu-items {% if 'dashboard' in request.path %} active {% endif %}">
+        <a class="nav-link" href="{% url 'dashboard' %}">
+          <span class="menu-icon">
+            <i class="mdi mdi-speedometer"></i>
+          </span>
+          <span class="menu-title">Dashboard</span>
+        </a>
+      </li>
+ 
+      <li class="nav-item nav-category">
+        <span class="nav-link">Data Master</span>
+      </li>
+
+      {% if admin %}
+  <li class="nav-item menu-items
+    {% if 'read_admin' in request.path or 'create_admin' in request.path or 'update_admin' in request.path %} active{% endif %}">
+  <a class="nav-link" data-toggle="collapse" href="#menu-admin"
+     aria-expanded="{% if 'admin' in request.path %}true{% else %}false{% endif %}"
+     aria-controls="menu-admin">
+    <span class="menu-icon"><i class="mdi mdi-account-multiple-outline"></i></span>
+    <span class="menu-title">Admin</span>
+    <i class="menu-arrow"></i>
+  </a>
+
+  <div class="collapse {% if 'admin' in request.path %}show{% endif %}" id="menu-admin">
+    <ul class="nav flex-column sub-menu">
+      <li class="nav-item{% if 'read_admin' in request.path %} active{% endif %}">
+        <a class="nav-link" href="{% url 'read_admin' %}">
+          <span><i class="mdi mdi-account-outline mr-2"></i></span><span>Data Admin</span>
+        </a>
+      </li>
+      <li class="nav-item{% if 'create_admin' in request.path %} active{% endif %}">
+        <a class="nav-link" href="{% url 'create_admin' %}">
+          <span><i class="mdi mdi-account-multiple-plus mr-2"></i></span><span>Tambah Admin</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</li>
+
+
+<li class="nav-item menu-items 
+{% if 'read_auditor' in request.path or 'create_auditor' in request.path or 'update_auditor' in request.path %} active {% endif %}">
+<a class="nav-link" data-toggle="collapse" href="#menu-auditor"
+aria-expanded="{% if 'auditor' in request.path %}true{% else %}false{% endif %}"
+aria-controls="menu-auditor">
+<span class="menu-icon">
+  <i class="mdi mdi-leaf"></i>
+</span>
+<span class="menu-title">Auditor</span>
+<i class="menu-arrow"></i>
+</a>
+
+<div class="collapse {% if 'auditor' in request.path %}show{% endif %}" id="menu-auditor">
+  <ul class="nav flex-column sub-menu">
+    <li class="nav-item {% if 'read_auditor' in request.path %} active {% endif %}">
+      <a class="nav-link" href="{% url 'read_auditor' %}">
+        <span><i class="mdi mdi-format-list-bulleted mr-2"></i></span>
+        <span>Data Auditor</span>
+      </a>
+    </li>
+    
+    <li class="nav-item {% if 'create_auditor' in request.path %} active {% endif %}">
+      <a class="nav-link" href="{% url 'create_auditor' %}">
+        <span><i class="mdi mdi-plus mr-2"></i></span>
+        <span>Tambah Auditor</span>
+      </a>
+      </li>
+    </ul>
+  </div>
+</li>
+{% endif %}
+
+{% if admin or auditor %}
+<li class="nav-item menu-items 
+    {% if 'read_manufaktur' in request.path or 'create_manufaktur' in request.path or 'update_manufaktur' in request.path %} active {% endif %}">
+  <a class="nav-link" data-toggle="collapse" href="#menu-manufaktur"
+     aria-expanded="{% if 'manufaktur' in request.path %}true{% else %}false{% endif %}"
+     aria-controls="menu-manufaktur">
+    <span class="menu-icon">
+      <i class="mdi mdi-food-apple"></i>
+    </span>
+    <span class="menu-title">UMKM</span>
+    <i class="menu-arrow"></i>
+  </a>
+
+  <div class="collapse {% if 'manufaktur' in request.path %}show{% endif %}" id="menu-manufaktur">
+    <ul class="nav flex-column sub-menu">
+      <li class="nav-item {% if 'read_manufaktur' in request.path %} active {% endif %}">
+        <a class="nav-link" href="{% url 'read_manufaktur' %}">
+          <span><i class="mdi mdi-format-list-bulleted mr-2"></i></span>
+          <span>Data UMKM</span>
+        </a>
+      </li>
+
+      <li class="nav-item {% if 'create_manufaktur' in request.path %} active {% endif %}">
+        <a class="nav-link" href="{% url 'create_manufaktur' %}">
+          <span><i class="mdi mdi-plus mr-2"></i></span>
+          <span>Tambah UMKM</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</li>
+{% endif %}
+
+
+{% with url_name=request.resolver_match.url_name %}
+<li class="nav-item menu-items
+    {% if url_name == 'read_produk' or url_name == 'create_produk' or url_name == 'update_produk' %} active{% endif %}">
+  <a class="nav-link" data-toggle="collapse" href="#menu-produk"
+     aria-expanded="{% if url_name == 'read_produk' or url_name == 'create_produk' or url_name == 'update_produk' %}true{% else %}false{% endif %}"
+     aria-controls="menu-produk">
+    <span class="menu-icon"><i class="mdi mdi-food"></i></span>
+    <span class="menu-title">Produk</span>
+    <i class="menu-arrow"></i>
+  </a>
+
+  <div class="collapse {% if url_name == 'read_produk' or url_name == 'create_produk' or url_name == 'update_produk' %}show{% endif %}" id="menu-produk">
+    <ul class="nav flex-column sub-menu">
+      <li class="nav-item {% if url_name == 'read_produk' %}active{% endif %}">
+        <a class="nav-link" href="{% url 'read_produk' %}">
+          <span><i class="mdi mdi-format-list-bulleted mr-2"></i></span>
+          <span>Data Produk</span>
+        </a>
+      </li>
+      {% if manufaktur %}
+      <li class="nav-item {% if url_name == 'create_produk' %}active{% endif %}">
+        <a class="nav-link" href="{% url 'create_produk' %}">
+          <span><i class="mdi mdi-plus mr-2"></i></span>
+          <span>Tambah Produk</span>
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </div>
+</li>
+{% endwith %}
+
+
+{% with url_name=request.resolver_match.url_name %}
+<li class="nav-item menu-items
+    {% if url_name == 'read_supplier' or url_name == 'create_supplier' or url_name == 'update_supplier' %} active{% endif %}">
+  <a class="nav-link" data-toggle="collapse" href="#menu-supplier"
+     aria-expanded="{% if url_name == 'read_supplier' or url_name == 'create_supplier' or url_name == 'update_supplier' %}true{% else %}false{% endif %}"
+     aria-controls="menu-supplier">
+    <span class="menu-icon"><i class="mdi mdi-cash-multiple"></i></span>
+    <span class="menu-title">Supplier</span>
+    <i class="menu-arrow"></i>
+  </a>
+
+  <div class="collapse {% if url_name == 'read_supplier' or url_name == 'create_supplier' or url_name == 'update_supplier' %}show{% endif %}" id="menu-supplier">
+    <ul class="nav flex-column sub-menu">
+      <li class="nav-item {% if url_name == 'read_supplier' %}active{% endif %}">
+        <a class="nav-link" href="{% url 'read_supplier' %}">
+          <span><i class="mdi mdi-cards-outline mr-2"></i></span>
+          <span>Data Supplier</span>
+        </a>
+      </li>
+      {% if auditor or manufaktur %}
+      <li class="nav-item {% if url_name == 'create_supplier' %}active{% endif %}">
+        <a class="nav-link" href="{% url 'create_supplier' %}">
+          <span><i class="mdi mdi-plus mr-2"></i></span>
+          <span>Tambah Supplier</span>
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </div>
+</li>
+{% endwith %}
+
+{% with url_name=request.resolver_match.url_name %}
+<li class="nav-item menu-items
+    {% if url_name == 'read_prodsup' or url_name == 'create_prodsup' or url_name == 'update_prodsup' %} active{% endif %}">
+  <a class="nav-link" data-toggle="collapse" href="#prod-sup"
+     aria-expanded="{% if url_name == 'read_prodsup' or url_name == 'create_prodsup' or url_name == 'update_prodsup' %}true{% else %}false{% endif %}"
+     aria-controls="prod-sup">
+    <span class="menu-icon"><i class="mdi mdi-store"></i></span>
+    <span class="menu-title">Produk-Supplier</span>
+    <i class="menu-arrow"></i>
+  </a>
+
+  <div class="collapse {% if url_name == 'read_prodsup' or url_name == 'create_prodsup' or url_name == 'update_prodsup' %}show{% endif %}" id="prod-sup">
+    <ul class="nav flex-column sub-menu">
+      <li class="nav-item {% if url_name == 'read_prodsup' %}active{% endif %}">
+        <a class="nav-link" href="{% url 'read_prodsup' %}">
+          <span><i class="mdi mdi-format-list-bulleted mr-2"></i></span>
+          <span>Data Produk-Supplier</span>
+        </a>
+      </li>
+      
+      {% if manufaktur %}
+      <li class="nav-item {% if url_name == 'create_prodsup' %}active{% endif %}">
+        <a class="nav-link" href="{% url 'create_prodsup' %}">
+          <span><i class="mdi mdi-plus mr-2"></i></span>
+          <span>Tambah Produk-Supplier</span>
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </div>
+</li>
+{% endwith %}
+
+    <li class="nav-item menu-items 
+    {% if 'hasil_keputusan' in request.path or 'keputusan_sistem' in request.path %} active {% endif %}">
+  <a class="nav-link" data-toggle="collapse" href="#menu-hasil-keputusan"
+     aria-expanded="{% if 'hasil_keputusan' in request.path or 'keputusan_sistem' in request.path %}true{% else %}false{% endif %}"
+     aria-controls="menu-hasil-keputusan">
+    <span class="menu-icon">
+      <i class="mdi mdi-file-document"></i>
+    </span>
+    <span class="menu-title">Hasil Keputusan</span>
+    <i class="menu-arrow"></i>
+  </a>
+
+  <div class="collapse {% if 'hasil_keputusan' in request.path or 'keputusan_sistem' in request.path %}show{% endif %}" id="menu-hasil-keputusan">
+    <ul class="nav flex-column sub-menu">
+      <li class="nav-item {% if 'keputusan_sistem' in request.path %} active {% endif %}">
+        <a class="nav-link" href="#">
+          <span><i class="mdi mdi-seed mr-2"></i></span>
+          <span>Keputusan Sistem</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</li>
+
+  </nav>
