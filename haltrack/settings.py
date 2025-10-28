@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
@@ -26,7 +27,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-default")
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = ["*", ".vercel.app"]
-
+CSRF_TRUSTED_ORIGINS = ["https://*.vercel.app"]
 
 # Application definition
 
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+     "whitenoise.middleware.WhiteNoiseMiddleware", 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -72,25 +74,43 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'haltrack.wsgi.application'
-
+ASGI_APPLICATION = "haltrack.asgi.application" 
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv("DB_NAME","postgres"),
-        'USER':os.getenv("DB_USER","postgres"),
-        'PASSWORD': os.getenv("DB_PASSWORD",""),
-        'HOST': os.getenv("DB_HOST", "localhost"),
-        'PORT':os.getenv("DB_PORT", "6543"),
-        'OPTIONS': {
-            'sslmode':"require" ,
-        },
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=os.getenv("DB_SSL_REQUIRE", "1") == "1",
+        )
     }
-}
-
+else:
+    # fallback sementara (tidak persisten di Vercel) agar tidak crash
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": "/tmp/db.sqlite3",
+        }
+    }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.getenv("DB_NAME","postgres"),
+#         'USER':os.getenv("DB_USER","postgres"),
+#         'PASSWORD': os.getenv("DB_PASSWORD",""),
+#         'HOST': os.getenv("DB_HOST", "localhost"),
+#         'PORT':os.getenv("DB_PORT", "6543"),
+#         'OPTIONS': {
+#             'sslmode':"require" ,
+#         },
+#     }
+# }
+# WhiteNoise storage (kompres + cache-busting)
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -125,7 +145,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"        # <— target collectstatic
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR,'static')
 ]
@@ -133,7 +154,7 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_ROLE_KEY")  # gunakan service_role untuk backend
 SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET", "upload")
