@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-import dj_database_url
+# import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
@@ -26,8 +26,8 @@ SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-default")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = ["*", ".vercel.app"]
-CSRF_TRUSTED_ORIGINS = ["https://*.vercel.app"]
+ALLOWED_HOSTS = [".vercel.app",".supabase.co",'db.ilmygstqgcyitlgsnxbd.supabase.co','127.0.0.1']
+# CSRF_TRUSTED_ORIGINS = ["https://*.vercel.app"]
 
 # Application definition
 
@@ -38,9 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'halal'
+    'halal',
+     "whitenoise.runserver_nostatic",
 ]
-
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
      "whitenoise.middleware.WhiteNoiseMiddleware", 
@@ -74,7 +75,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'haltrack.wsgi.application'
-ASGI_APPLICATION = "haltrack.asgi.application" 
+# ASGI_APPLICATION = "haltrack.asgi.application" 
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -128,8 +129,10 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / "staticfiles"        # <— target collectstatic
+STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static', 'static')     # <— target collectstatic
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR,'static')
 ]
