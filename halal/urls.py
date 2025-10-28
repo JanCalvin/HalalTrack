@@ -1,5 +1,7 @@
 from django.urls import path
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 urlpatterns = [
 
         path('',views.awal, name='awal'),
@@ -44,3 +46,6 @@ urlpatterns = [
         path('update_prodsup/<str:id>',views.update_produk_supplier, name='update_prodsup'),
         path('delete_produk_supplier/<str:id>',views.delete_produk_supplier, name='delete_prodsup'),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
+urlpatterns += static(settings.STATIC_URL, document_root = settings.STATIC_ROOT)
