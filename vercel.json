@@ -1,9 +1,6 @@
 {
   "functions": {
-    "api/index.py": {
-      "runtime": "python3.12",
-      "maxDuration": 10
-    }
+    "api/index.py": { "runtime": "python3.12", "maxDuration": 10 }
   },
   "routes": [
     { "src": "/static/(.*)", "dest": "/static/$1" },
