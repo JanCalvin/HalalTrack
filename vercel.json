@@ -1,13 +1,16 @@
 {
     "version": 2,
-    "functions": {
-        "haltrack/wsgi.py": {
-            "runtime": "@vercel/python@4.3.0"
-        },
-        "build_files.sh": {
-            "runtime": "@vercel/static-build"
+    "builds": [
+        {
+            "src": "haltrack/wsgi.py",
+            "use": "@vercel/python",
+            "config": {
+                "maxLambdaSize": "15mb",
+                "runtime": "python3.13" 
+                
+            }
         }
-    },
+    ],
     "routes": [
         {
             "src": "/static/(.*)",
