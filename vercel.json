@@ -1,13 +1,30 @@
-{
-  "functions": {
-    "api/index.py": {
-      "runtime": "python3.11",
-      "maxDuration": 10
+    {
+      "version": 2,
+      "builds": [
+        {
+          "src": "haltrack/wsgi.py",
+          "use": "@vercel/python",
+          "config": {
+            "maxLambdaSize": "15mb",
+            "runtime": "python3.x"
+          }
+        },
+        {
+          "src": "build_files.sh",
+          "use": "@vercel/static-build",
+          "config": {
+            "distDir": "staticfiles"
+          }
+        }
+      ],
+      "routes": [
+        {
+          "src": "/(.*)",
+          "dest": "haltrack/wsgi.py"
+        },
+        {
+          "src": "/static/(.*)",
+          "dest": "/static/$1"
+        }
+      ]
     }
-  },
-  "routes": [
-    { "src": "/static/(.*)", "dest": "/static/$1" },
-    { "src": "/(.*)", "dest": "/api/index.py" }
-  ],
-  "buildCommand": "python -m pip install -r requirements.txt && python manage.py collectstatic --noinput"
-}
