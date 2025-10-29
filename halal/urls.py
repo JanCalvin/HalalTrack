@@ -45,4 +45,4 @@ urlpatterns = [
         path('create_prodsup',views.create_produk_supplier, name='create_prodsup'),
         path('update_prodsup/<str:id>',views.update_produk_supplier, name='update_prodsup'),
         path('delete_produk_supplier/<str:id>',views.delete_produk_supplier, name='delete_prodsup'),
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
