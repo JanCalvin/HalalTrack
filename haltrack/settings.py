@@ -24,7 +24,7 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-default")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "True") == "True"
+DEBUG = False
 
 ALLOWED_HOSTS = [".vercel.app",".supabase.co",'db.ilmygstqgcyitlgsnxbd.supabase.co','127.0.0.1']
 # CSRF_TRUSTED_ORIGINS = ["https://*.vercel.app"]
@@ -75,7 +75,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'haltrack.wsgi.application'
-ASGI_APPLICATION = "haltrack.asgi.application" 
+# ASGI_APPLICATION = "haltrack.asgi.application" 
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -90,6 +90,7 @@ DATABASES = {
         'PORT':os.getenv("DB_PORT", "6543"),
         'OPTIONS': {
             'sslmode':"require" ,
+            'connect_timeout': 10,
         },
     }
 }
