@@ -33,8 +33,6 @@ from utils.qr_code import make_qr_png_bytes
 from django.contrib.auth.models import User, Group
 # views.py
 import re
-# import cv2
-import numpy as np
 from django.contrib.auth import update_session_auth_hash  # kalau ubah pw user yang sedang login
 def loginview(request):
     if request.user.is_authenticated:
@@ -87,43 +85,45 @@ def performlogout(request):
 # Create your views here.
 ID_RE = re.compile(r'[A-Z]{2}\d{6}')
 
-def awal(request):
-    if request.method != 'POST':
-        return render(request, 'base/awalan.html')
+# def awal(request):
+#     if request.method != 'POST':
+#         return render(request, 'base/awalan.html')
 
-    # Teks pencarian dari input atau hasil decode jsQR
-    q_raw = (request.POST.get('q') or '').strip()
+#     # Teks pencarian dari input atau hasil decode jsQR
+#     q_raw = (request.POST.get('q') or '').strip()
 
-    # Jika QR payload berisi ID di tengah2 teks, ambil ID-nya;
-    # kalau tidak ada match, pakai apa adanya untuk fuzzy search.
-    m = ID_RE.search(q_raw.upper())
-    q = m.group(0) if m else q_raw
+#     # Jika QR payload berisi ID di tengah2 teks, ambil ID-nya;
+#     # kalau tidak ada match, pakai apa adanya untuk fuzzy search.
+#     m = ID_RE.search(q_raw.upper())
+#     q = m.group(0) if m else q_raw
 
-    getproduk = None
-    if q:
-      getproduk = (
-          models.Produk.objects
-          .select_related('id_manufaktur')
-          .filter(
-              Q(id_produk__iexact=q) |
-              Q(nama_produk__icontains=q) |
-              Q(id_manufaktur__nama_usaha__icontains=q)
-          )
-          .first()
-      )
+#     getproduk = None
+#     if q:
+#       getproduk = (
+#           models.Produk.objects
+#           .select_related('id_manufaktur')
+#           .filter(
+#               Q(id_produk__iexact=q) |
+#               Q(nama_produk__icontains=q) |
+#               Q(id_manufaktur__nama_usaha__icontains=q)
+#           )
+#           .first()
+#       )
 
-    if not getproduk:
-        messages.error(
-            request,
-            'Produk tidak ditemukan.' if q else 'QR tidak terbaca atau kosong.'
-        )
+#     if not getproduk:
+#         messages.error(
+#             request,
+#             'Produk tidak ditemukan.' if q else 'QR tidak terbaca atau kosong.'
+#         )
 
-    return render(request, 'base/awalan.html', {
-        'getproduk': getproduk,
-        'nama_produk': q_raw,   # tampilkan apa yg diketik/terbaca
-    })
+#     return render(request, 'base/awalan.html', {
+#         'getproduk': getproduk,
+#         'nama_produk': q_raw,   # tampilkan apa yg diketik/terbaca
+#     })
     
-
+def awal(request):
+    # Hanya me-return halaman statis, tanpa mengakses database atau logic kompleks
+    return render(request, 'base/awalan.html')
 
 '''CRUD manufaktur'''
 @login_required(login_url="login")
