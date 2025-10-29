@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'halal',
+    "whitenoise.runserver_nostatic",
 ]
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 MIDDLEWARE = [
