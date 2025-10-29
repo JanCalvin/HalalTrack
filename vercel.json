@@ -11,11 +11,17 @@
             }
         }
     ],
+    
+   
+    "buildCommand": "python manage.py collectstatic --noinput && vercel build",
+    
     "routes": [
+   
         {
             "src": "/static/(.*)",
             "dest": "/static/$1"
         },
+
         {
             "src": "/(.*)",
             "dest": "haltrack/wsgi.py"
