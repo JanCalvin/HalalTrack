@@ -126,6 +126,7 @@
   <input id="q" name="q" type="text" placeholder="Masukkan ID Produk" autocomplete="off" value="{{ nama_produk }}" />
   <button type="button" id="qr-btn" title="Unggah gambar QR"> <!-- QR icon (inline SVG) --> <svg class="qr-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"> <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm6-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm10-2h2v2h-2v-2zm4 0h2v4h-2v-4zm-4 4h2v2h-2v-2zm0 4h6v2h-6v-2z"/> </svg> </button>
   <input id="qr-file" class="visually-hidden" type="file" name="qr_file" accept="image/*"/>
+  <canvas id="qrCanvas" style="display:none"></canvas>
 </form>
       <div class="hint">Tip: klik ikon QR untuk unggah gambar QR. Jika didukung browser, isinya akan terbaca otomatis.</div>
       <div id="qr-result" class="pill" style="display:none"></div>
@@ -222,42 +223,119 @@
   <div class="wrap">© 2025 Haltrack. Semua hak cipta dilindungi.</div>
 </footer>
 
-
+<script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
 <script>
-  const form   = document.getElementById('search-form');
-  const qrBtn  = document.getElementById('qr-btn');
-  const qrFile = document.getElementById('qr-file');
-  const inputQ = document.getElementById('q');
+  const form     = document.getElementById('search-form');
+  const qrBtn    = document.getElementById('qr-btn');
+  const qrFile   = document.getElementById('qr-file');
+  const inputQ   = document.getElementById('q');
   const resultEl = document.getElementById('qr-result');
+
+  const canvas = document.getElementById('qrCanvas');
+  const ctx    = canvas.getContext('2d');
 
   qrBtn.addEventListener('click', () => qrFile.click());
 
-  // Enter untuk submit
+  // Enter untuk submit manual
   inputQ.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') form.submit();
   });
 
-  // Setelah pilih file -> OTOMATIS submit
-  qrFile.addEventListener('change', async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Helper: gambar image ke canvas dengan skala maksimum biar cepat
+  async function drawToCanvas(file){
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    await new Promise((res, rej) => {
+      img.onload = res;
+      img.onerror = rej;
+      img.src = url;
+    });
+    // batasi sisi terpanjang 1200 px agar performa oke
+    const maxSide = 1200;
+    let { width, height } = img;
+    const scale = Math.min(1, maxSide / Math.max(width, height));
+    width  = Math.round(width  * scale);
+    height = Math.round(height * scale);
 
-    // (opsional) coba decode di client; kalau berhasil, isi input
-    if ('BarcodeDetector' in window) {
-      try {
-        const detector = new BarcodeDetector({ formats: ['qr_code'] });
-        const bmp = await createImageBitmap(file);
-        const codes = await detector.detect(bmp);
-        if (codes && codes.length) inputQ.value = codes[0].rawValue || '';
-      } catch (_) { /* abaikan */ }
-    }
-    form.submit(); // <-- penting
-  });
+    canvas.width = width;
+    canvas.height = height;
+    ctx.drawImage(img, 0, 0, width, height);
+    URL.revokeObjectURL(url);
+    return ctx.getImageData(0, 0, width, height);
+  }
 
   function showResult(text){
     resultEl.textContent = text;
     resultEl.style.display = 'inline-flex';
   }
+
+  // Decode gambar dengan jsQR. Coba beberapa rotasi ringan jika perlu.
+  function tryDecodeWithRotations(imageData){
+    // Percobaan utama
+    let res = jsQR(imageData.data, imageData.width, imageData.height);
+    if (res && res.data) return res.data;
+
+    // Coba rotasi 90/180/270 derajat jika gagal
+    const rotations = [90, 180, 270];
+    for (const deg of rotations){
+      const rotated = rotateImageData(imageData, deg);
+      res = jsQR(rotated.data, rotated.width, rotated.height);
+      if (res && res.data) return res.data;
+    }
+    return '';
+  }
+
+  // Utility rotasi sederhana
+  function rotateImageData(src, deg){
+    const dstCanvas = document.createElement('canvas');
+    const dctx = dstCanvas.getContext('2d');
+    if (deg === 90 || deg === 270){
+      dstCanvas.width  = src.height;
+      dstCanvas.height = src.width;
+    } else {
+      dstCanvas.width  = src.width;
+      dstCanvas.height = src.height;
+    }
+    dctx.save();
+    dctx.translate(dstCanvas.width / 2, dstCanvas.height / 2);
+    dctx.rotate((deg * Math.PI) / 180);
+    dctx.drawImage(canvas, -canvas.width / 2, -canvas.height / 2);
+    dctx.restore();
+    const out = dctx.getImageData(0, 0, dstCanvas.width, dstCanvas.height);
+    return out;
+  }
+
+  // Setelah pilih file -> decode dengan jsQR, isi input, lalu submit
+  qrFile.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const imageData = await drawToCanvas(file);
+      let decoded = tryDecodeWithRotations(imageData);
+
+      // fallback: BarcodeDetector (kalau ada) — kadang lebih beruntung
+      if (!decoded && 'BarcodeDetector' in window) {
+        try {
+          const bmp = await createImageBitmap(file);
+          const detector = new BarcodeDetector({ formats: ['qr_code'] });
+          const codes = await detector.detect(bmp);
+          if (codes && codes.length) decoded = codes[0].rawValue || '';
+        } catch {}
+      }
+
+      if (decoded) {
+        inputQ.value = decoded;
+        showResult(`QR terbaca: ${decoded}`);
+        form.submit();
+      } else {
+        showResult('QR tidak terbaca. Coba foto yang lebih tajam/kontras.');
+      }
+    } catch (err) {
+      console.error(err);
+      showResult('Gagal memproses gambar.');
+    }
+  });
 </script>
 </body>
 </html>

@@ -24,9 +24,15 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-default")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = [".vercel.app",".supabase.co",'db.ilmygstqgcyitlgsnxbd.supabase.co','127.0.0.1']
+ALLOWED_HOSTS = [
+    ".vercel.app",
+    "localhost",
+    "127.0.0.1",
+    "0.0.0.0",
+    ".supabase.co",
+]
 # CSRF_TRUSTED_ORIGINS = ["https://*.vercel.app"]
 
 # Application definition
@@ -141,8 +147,13 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-SECURE_SSL_REDIRECT = True
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# if DEBUG:
+#     SECURE_SSL_REDIRECT = False
+#     SECURE_PROXY_SSL_HEADER = None
+# else:
+#     SECURE_SSL_REDIRECT = True
+#     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_ROLE_KEY")  # gunakan service_role untuk backend
 SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET", "upload")

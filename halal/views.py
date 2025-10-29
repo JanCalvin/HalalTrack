@@ -33,7 +33,7 @@ from utils.qr_code import make_qr_png_bytes
 from django.contrib.auth.models import User, Group
 # views.py
 import re
-import cv2
+# import cv2
 import numpy as np
 from django.contrib.auth import update_session_auth_hash  # kalau ubah pw user yang sedang login
 def loginview(request):
@@ -86,59 +86,41 @@ def performlogout(request):
     return redirect("login")
 # Create your views here.
 ID_RE = re.compile(r'[A-Z]{2}\d{6}')
-def awal(request) :
+
+def awal(request):
     if request.method != 'POST':
         return render(request, 'base/awalan.html')
 
-    q = (request.POST.get('q') or '').strip()
-    qr_file = request.FILES.get('qr_file')  # None kalau tidak ada
+    # Teks pencarian dari input atau hasil decode jsQR
+    q_raw = (request.POST.get('q') or '').strip()
+
+    # Jika QR payload berisi ID di tengah2 teks, ambil ID-nya;
+    # kalau tidak ada match, pakai apa adanya untuk fuzzy search.
+    m = ID_RE.search(q_raw.upper())
+    q = m.group(0) if m else q_raw
+
     getproduk = None
-    id_qr =q
-    # Jika ada file -> decode di server
-    if qr_file and not q:
-        try:
-            buf = np.frombuffer(qr_file.read(), np.uint8)
-            img = cv2.imdecode(buf, cv2.IMREAD_COLOR)
-            det = cv2.QRCodeDetector()
-            text, pts, _ = det.detectAndDecode(img)
-            if not text:
-                ok, texts, pts, _ = det.detectAndDecodeMulti(img)
-                text = next((t for t in (texts or []) if t), '')
+    if q:
+      getproduk = (
+          models.Produk.objects
+          .select_related('id_manufaktur')
+          .filter(
+              Q(id_produk__iexact=q) |
+              Q(nama_produk__icontains=q) |
+              Q(id_manufaktur__nama_usaha__icontains=q)
+          )
+          .first()
+      )
 
-            if not text:
-                messages.error(request, 'QR tidak terbaca!')
-            else:
-                m = ID_RE.search(text.upper())
-                if not m:
-                    return JsonResponse(
-                        {'payload': text, 'error': 'ID_QR tidak ditemukan di payload'},
-                        status=400
-                    )
-                id_qr = m.group(0)
-                getproduk = (models.Produk.objects
-                             .select_related('id_manufaktur')
-                             .filter(id_produk__iexact=id_qr)
-                             .first())
-                if not getproduk:
-                    messages.error(request, f'Produk dengan ID {id_qr} tidak ditemukan.')
-        except Exception as e:
-            messages.error(request, f'Gagal memproses gambar QR: {e}')
+    if not getproduk:
+        messages.error(
+            request,
+            'Produk tidak ditemukan.' if q else 'QR tidak terbaca atau kosong.'
+        )
 
-    # Jika ada teks pencarian (manual / dari client decode)
-    if not getproduk and q:
-        getproduk = (models.Produk.objects
-                     .select_related('id_manufaktur')
-                     .filter(
-                         Q(id_produk__iexact=q) |
-                         Q(nama_produk__icontains=q) |
-                         Q(id_manufaktur__nama_usaha__icontains=q)
-                     ).first())
-        if not getproduk:
-            messages.error(request, f'Produk dengan kata kunci "{q}" tidak ditemukan.')
-    
     return render(request, 'base/awalan.html', {
         'getproduk': getproduk,
-        'nama_produk': id_qr,
+        'nama_produk': q_raw,   # tampilkan apa yg diketik/terbaca
     })
     
 
