@@ -230,13 +230,13 @@ aria-controls="menu-auditor">
   <div class="collapse {% if 'hasil_keputusan' in request.path or 'keputusan_sistem' in request.path %}show{% endif %}" id="menu-hasil-keputusan">
     <ul class="nav flex-column sub-menu">
       <li class="nav-item {% if 'keputusan_sistem' in request.path %} active {% endif %}">
-        <a class="nav-link" href="#">
+        <a class="nav-link" href="{% url 'hasil_halal' %}">
           <span><i class="mdi mdi-seed mr-2"></i></span>
           <span>Keputusan Sistem</span>
         </a>
       </li>
     </ul>
-  </div>
+  </div>  
 </li>
 
   </nav>

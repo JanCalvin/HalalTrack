@@ -1072,7 +1072,8 @@ def delete_produk_supplier(request, id) :
     messages.error(request, "Data produk_supplier berhasil dihapus!")
     return redirect('read_prodsup')
 
-
+@login_required(login_url="login")
+@role_required(['admin','auditor'])
 def dashboard(request) :
 
     filterumkm_halal = models.ProdukSupplier.objects.filter(id_produk__id_manufaktur__status_halal = True)
@@ -1104,3 +1105,56 @@ def dashboard(request) :
         'nonhalal' : jumlah_nonhalal
     })
 
+
+@login_required(login_url="login")
+@role_required(['manufaktur','admin','auditor'])
+def hasil_halal(request) :
+    user = request.user
+    is_manufaktur = user.groups.filter(name__iexact='manufaktur').exists()
+    username = user.username
+    manufakturobj = models.Manufaktur.objects.all()
+     # 🔹 Bagian POST untuk update catatan produk
+    if request.method == "POST":
+        id_produk = request.POST.get("id_produk")
+        catatan = request.POST.get("catatan", "")
+
+        try:
+            produk = models.Produk.objects.get(id_produk=id_produk)
+            produk.catatan = catatan
+            produk.save()
+            messages.success(request, f"Catatan untuk {produk.nama_produk} berhasil diperbarui.")
+        except models.Produk.DoesNotExist:
+            messages.error(request, "Produk tidak ditemukan.")
+        return redirect("hasil_halal")  # kembali ke halaman yang sama setelah update
+    if is_manufaktur :
+        produkobj = models.Produk.objects.filter(id_manufaktur__username = username)
+        filterumkm = ''
+    else : 
+        filterumkm = request.GET.get('filterumkm','')
+        if filterumkm : 
+            produkobj = models.Produk.objects.all()
+        else :
+            produkobj = models.Produk.objects.filter(id_manufaktur__username = filterumkm)
+    
+    list1 = []
+    for i in produkobj :
+        list2 = []
+        id_produk = i.id_produk
+        filterprodsup = models.DetailProdukSupplier.objects.filter(id_produk_supplier__id_produk =id_produk )
+
+        list2.append(i)
+        list2.append(filterprodsup)
+        jumlah_supplier_halal = models.DetailProdukSupplier.objects.filter(id_produk_supplier__id_produk =id_produk,id_supplier__status_halal = True).count()
+        list2.append(jumlah_supplier_halal)
+
+        list1.append(list2)
+    print('tes', list1)
+    return render(request,'hasil/hasil_halal.html',{
+    'produk_halal' : list1,
+    'manufakturobj' : manufakturobj,
+    'filterumkm' :filterumkm,
+    'is_manufaktur' : is_manufaktur
+})
+           
+                
+                
