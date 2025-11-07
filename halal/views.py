@@ -842,7 +842,7 @@ def update_supplier(request, id):
         return redirect('read_supplier')
     
 @login_required(login_url="login") 
-# @role_required(['auditor','manufaktur'])
+@role_required(['auditor','manufaktur'])
 def update_status3(request,id,value) :
     getsupplier = models.Supplier.objects.get(id_supplier = id)
     if value == 'Halal' :

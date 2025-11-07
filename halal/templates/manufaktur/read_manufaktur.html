@@ -58,11 +58,15 @@
                                 <th>Email</th>
                                 <th>Username</th>
                                 <th>Status Halal</th>
+                                {% if auditor or admin %}
                                 <th>Ubah Status</th>
                                 <th>Status Akun|Ubah Status</th>
+                                {% endif %}
                                 <th>Tanggal Dibuat</th>
                                 <th>Catatan Regis</th>
+                                {% if auditor or admin %}
                                 <th class="text-center">Action</th>
+                                {% endif %}
                             </tr>
                         </thead>
     
@@ -84,7 +88,7 @@
                                 <td>{{item.username}}</td>
             
                                 
-                                
+                                 {% if auditor or admin %}
                                 <td>
                                      {{item.status_halal}}
                                     
@@ -130,14 +134,15 @@
                                 </button>
                                     </a>
                                 </td>
+                                {% endif %}
                                   <td>{{item.tanggal_dibuat}}</td>
                                 <td>{{item.catatan_regis}}</td>
-
+                                 {% if auditor or admin %}
                                 <td>
                                     <a href="{% url 'update_manufaktur' item.id_manufaktur %}" ><Button class="btn btn-inverse-warning btn-sm btn-icon-text">Update</Button></a>
                                     <a href="{% url 'delete_manufaktur' item.id_manufaktur %}"><Button class="btn btn-inverse-danger btn-sm btn-icon-text">Delete</Button></a>
                                 </td>
-                   
+                                {% endif %}
                             </tr>
                             {% endwith %}
                             {% endfor %}

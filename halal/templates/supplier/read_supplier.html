@@ -30,9 +30,10 @@
                                 <th>Asal Bahan</th>
                                 
                                 <th>Status Halal</th>      
-                               
+                               {% if auditor or manufaktur %}
                                 <th>Ubah Status</th>
                                 <th class="text-center">Action</th>
+                                {% endif }
                                
                             </tr>
                         </thead>
@@ -52,7 +53,7 @@
                                     
                                     
                                 </td>
-                               
+                                {% if auditor or manufaktur %}
                                 <td>
                                     
                                     <a href="{% url 'update_status3' item.id_supplier 'Halal' %}">
@@ -81,7 +82,7 @@
                                     <a href="{% url 'update_supplier' item.id_supplier %}" ><Button class="btn btn-inverse-warning btn-sm btn-icon-text">Update</Button></a>
                                     <a href="{% url 'delete_supplier' item.id_supplier %}"><Button class="btn btn-inverse-danger btn-sm btn-icon-text">Delete</Button></a>
                                 </td>
-                               
+                               {% endif %}
                             </tr>
                    
                             {% endwith %}
