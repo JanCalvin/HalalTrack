@@ -42,7 +42,7 @@ class Manufaktur(models.Model) :
     nama_usaha = models.CharField(max_length=300)
     alamat = models.TextField()
     jenis_produk = models.CharField(max_length=100)
-    status_halal = models.BooleanField(default=False)
+    status_halal = models.CharField(max_length=100, default='Belum Halal')
     contact = models.PositiveBigIntegerField()
     email = models.EmailField()
     username = models.CharField(max_length=100)
@@ -50,11 +50,8 @@ class Manufaktur(models.Model) :
     tanggal_dibuat = models.DateTimeField(auto_now_add=True)
     catatan_regis = models.TextField(blank=True,null=True)
     def __str__ (self) : 
-        if self.status_halal == 'True' :
-            status = 'Halal'
-        else :
-            status = 'Non-Halal'
-        return f'{self.nama_usaha}-{status}'
+      
+        return f'{self.nama_usaha}-{self.status_halal}'
     
 class Produk(models.Model) :
     id_produk = models.CharField(primary_key=True,max_length=10,unique=True,editable=False,default=generate_id)
@@ -73,13 +70,10 @@ class Supplier(models.Model) :
     nama_supplier = models.CharField(max_length=100)
     jenis_bahanbaku = models.CharField(max_length=100)
     asal_bahan = models.CharField(max_length=100)
-    status_halal = models.BooleanField(default=False)
+    status_halal = models.CharField(max_length=100, default='Belum Halal')
     def __str__ (self) : 
-        if self.status_halal == 'True' :
-            status = 'Halal'
-        else :
-            status = 'Non-Halal'
-        return f'{self.pembuat_data}-{self.nama_supplier}-{status}'
+       
+        return f'{self.pembuat_data}-{self.nama_supplier}-{self.status_halal}'
     
 class ProdukSupplier(models.Model) :
     id_produk_supplier = models.AutoField(primary_key=True)

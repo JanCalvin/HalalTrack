@@ -127,6 +127,13 @@
   <button type="button" id="qr-btn" title="Unggah gambar QR"> <!-- QR icon (inline SVG) --> <svg class="qr-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"> <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm6-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm10-2h2v2h-2v-2zm4 0h2v4h-2v-4zm-4 4h2v2h-2v-2zm0 4h6v2h-6v-2z"/> </svg> </button>
   <input id="qr-file" class="visually-hidden" type="file" name="qr_file" accept="image/*"/>
   <canvas id="qrCanvas" style="display:none"></canvas>
+  <!-- ✅ Tombol Clear -->
+   <a href="{% url 'awal' %}">
+     <button type="button" id="clear-btn" title="Bersihkan pencarian"
+             style="background:#555;padding:.7rem .9rem;border-radius:999px;color:white;">
+       ✕
+     </button>
+   </a>
 </form>
       <div class="hint">Tip: klik ikon QR untuk unggah gambar QR. Jika didukung browser, isinya akan terbaca otomatis.</div>
       <div id="qr-result" class="pill" style="display:none"></div>
@@ -141,6 +148,7 @@
     <h3>{{ getproduk.nama_produk }}</h3>
     <div style="color:var(--mute)">UMKM: {{ getproduk.id_manufaktur.nama_usaha }}</div>
     <div>ID Produk: {{ getproduk.id_produk }}</div>
+    <div>Status: {{status_produk }}</div>
   </div>
 </article>
 </div> </div> </section>

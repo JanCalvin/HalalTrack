@@ -57,7 +57,8 @@
                                 <th>Contact</th>
                                 <th>Email</th>
                                 <th>Username</th>
-                                <th>Status Halal|Ubah Status</th>
+                                <th>Status Halal</th>
+                                <th>Ubah Status</th>
                                 <th>Status Akun|Ubah Status</th>
                                 <th>Tanggal Dibuat</th>
                                 <th>Catatan Regis</th>
@@ -85,19 +86,32 @@
                                 
                                 
                                 <td>
-                                    {% if status_halal %}
-                                    Halal
-                                    {% else %}
-                                    Tidak Halal
-                                    {% endif %}
-                                    <a href="{% url 'update_status' item.id_manufaktur %}">
-<button type="button"
-                                        class="btn btn-inverse-dark btn-sm btn-icon-text mt-2 open-status-modal"
-                                        >
-                                    Update Status
-                                </button>
-                                    </a>
-                                     
+                                     {{item.status_halal}}
+                                    
+                                  </td>
+                                  <td>
+                                      <a href="{% url 'update_status' item.id_manufaktur 'Halal' %}">
+    <button type="button"
+                                          class="btn btn-inverse-primary btn-sm btn-icon-text mt-2 open-status-modal"
+                                          >
+                                      Halal
+                                  </button>
+                                      </a>
+                                      <a href="{% url 'update_status' item.id_manufaktur 'Non Halal' %}">
+    <button type="button"
+                                          class="btn btn-inverse-warning btn-sm btn-icon-text mt-2 open-status-modal"
+                                          >
+                                      Non Halal
+                                  </button>
+                                      </a>
+                                      <a href="{% url 'update_status' item.id_manufaktur 'Belum Halal' %}">
+    <button type="button"
+                                          class="btn btn-inverse-info btn-sm btn-icon-text mt-2 open-status-modal"
+                                          >
+                                     Belum Halal
+                                  </button>
+                                      </a>
+
                                     </td>
                                 <td>
                                     {% if status_akun %}
@@ -107,10 +121,10 @@
                                     {% endif %}
                                 
                               
-                                <!-- Tombol buka modal -->
+
                                  <a href="{% url 'update_status2' item.id_manufaktur %}">
 <button type="button"
-                                        class="btn btn-inverse-dark btn-sm btn-icon-text mt-2 open-status-modal"
+                                        class="btn btn-inverse-primary btn-sm btn-icon-text mt-2 open-status-modal"
                                         >
                                     Update Status
                                 </button>

@@ -29,10 +29,11 @@
                                 <th>Jenis BB</th>
                                 <th>Asal Bahan</th>
                                 
-                                {% if manufaktur or auditor %}
                                 <th>Status Halal</th>      
+                               
+                                <th>Ubah Status</th>
                                 <th class="text-center">Action</th>
-                                {% endif %}
+                               
                             </tr>
                         </thead>
     
@@ -46,27 +47,41 @@
                                 <td>{{item.jenis_bahanbaku}}</td>
                                 <td>{{item.asal_bahan}}</td>
                               
-                               {% if manufaktur or auditor %}
-                                    <td>
-                                    {% if status_halal %}
-                                    Halal
-                                    {% else %}
-                                    Tidak Halal
-                                    {% endif %}
-                                    <a href="{% url 'update_status3' item.id_supplier %}">
-<button type="button"
-                                        class="btn btn-inverse-dark btn-sm btn-icon-text mt-2 open-status-modal"
+                                <td>
+                                    {{item.status_halal}}
+                                    
+                                    
+                                </td>
+                               
+                                <td>
+                                    
+                                    <a href="{% url 'update_status3' item.id_supplier 'Halal' %}">
+    <button type="button"
+                                        class="btn btn-inverse-primary btn-sm btn-icon-text mt-2 open-status-modal"
                                         >
-                                    Update Status
+                                   Halal
                                 </button>
                                     </a>
-                                     
+                                    <a href="{% url 'update_status3' item.id_supplier 'Non Halal' %}">
+    <button type="button"
+                                        class="btn btn-inverse-warning btn-sm btn-icon-text mt-2 open-status-modal"
+                                        >
+                                   Non-Halal
+                                </button>
+                                    </a>
+                                    <a href="{% url 'update_status3' item.id_supplier 'Belum Halal' %}">
+    <button type="button"
+                                        class="btn btn-inverse-info btn-sm btn-icon-text mt-2 open-status-modal"
+                                        >
+                                    Belum Halal
+                                </button>
+                                    </a>
                                     </td>
                                 <td>
                                     <a href="{% url 'update_supplier' item.id_supplier %}" ><Button class="btn btn-inverse-warning btn-sm btn-icon-text">Update</Button></a>
                                     <a href="{% url 'delete_supplier' item.id_supplier %}"><Button class="btn btn-inverse-danger btn-sm btn-icon-text">Delete</Button></a>
                                 </td>
-                                {% endif %}
+                               
                             </tr>
                    
                             {% endwith %}

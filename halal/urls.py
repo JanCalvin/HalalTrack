@@ -16,9 +16,9 @@ urlpatterns = [
         path('update_manufaktur/<str:id>',views.update_manufaktur, name='update_manufaktur'),
         path('delete_manufaktur/<str:id>',views.delete_manufaktur, name='delete_manufaktur'),
     
-        path('update_status/<str:id>',views.update_status, name='update_status'),
+        path('update_status/<str:id>/<str:value>',views.update_status, name='update_status'),
         path('update_status2/<str:id>',views.update_status2, name='update_status2'),
-        path('update_status3/<str:id>',views.update_status3, name='update_status3'),
+        path('update_status3/<str:id>/<str:value>',views.update_status3, name='update_status3'),
 
        
         path('read_auditor',views.read_auditor, name='read_auditor'),

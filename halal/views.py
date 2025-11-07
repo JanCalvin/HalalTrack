@@ -99,7 +99,7 @@ def awal(request):
 
     getproduk = None
     if q:
-      getproduk = (
+        getproduk = (
           models.Produk.objects
           .select_related('id_manufaktur')
           .filter(
@@ -109,17 +109,82 @@ def awal(request):
           )
           .first()
       )
+        id_produk = getproduk.id_produk
+        filterprodsup = models.DetailProdukSupplier.objects.filter(id_produk_supplier__id_produk =id_produk)
+       
 
+        status_halal_m = getproduk.id_manufaktur.status_halal
+        list3 = []
+        for x in filterprodsup :
+            list3.append(x.id_supplier.status_halal)
+    #    MANUF HALAL + SUPPLIER HALAL
+        if status_halal_m == 'Halal' and ('Non Halal' not in list3 and 'Belum Halal' not in list3):
+            print(1)
+            status_produk = 'Halal'
+        
+        #  MANUF HALAL + SUPPLIER NON HALAL
+        elif status_halal_m == 'Halal' and 'Non Halal' in list3  :
+            print(2)
+            status_produk = 'Non Halal'
+            catatan = 'Mohon ganti bahan baku produksi/ ulang pengajuan sertifikasi halal produk menjadi produk Non Halal'
+        #  MANUF HALAL + SUPPLIER BELUM HALAL
+        elif status_halal_m == 'Halal' and ('Non Halal'not in list3 and 'Belum Halal' in list3) :
+            print(3)
+            status_produk = 'Halal'
+            catatan = 'Terdapat supplier yang belum tersertifikasi halal!'
+        
+        # MANUF BELUM HALAL + SUPPLIER HALAL
+        elif status_halal_m == 'Belum Halal' and ('Non Halal'not in list3 and 'Belum Halal' not in list3) :
+            print(4)
+            status_produk = 'Halal'
+            catatan = 'Mohon segera menerbitkan sertifikasi Halal'
+        # MANUF BELUM HALAL + SUPPLIER NON HALAL
+        elif status_halal_m == 'Belum Halal' and 'Non Halal' in list3 :
+            print(5)
+            status_produk = 'Non Halal'
+            catatan = 'Mohon ganti bahan baku produksi/ ulang pengajuan sertifikasi halal produk menjadi produk Non Halal'
+        # MANUF BELUM HALAL + SUPPLIER BELUM HALAL
+        elif status_halal_m == 'Belum Halal' and ('Non Halal'not in list3 and 'Belum Halal' in list3) :
+            print(6)
+            status_produk = 'Non Halal'
+            catatan = 'Produk tidak halal dan supplier belum tersertifikasi halal!'
+        
+        # MANUF NON HALAL + SUPPLIER HALAL
+        elif status_halal_m == 'Non Halal' and ('Non Halal'not in list3 and 'Belum Halal' not in list3) :
+            print(7)
+            status_produk = 'Non Halal'
+            catatan = 'Produk tidak halal walaupun seluruh bahan baku halal'
+        # MANUF NON HALAL + SUPPLIER NON HALAL
+        elif status_halal_m == 'Non Halal' and 'Non Halal' in list3 :
+            print(8)
+            status_produk = 'Non Halal'
+            catatan = ' Produk tidak halal serta terdapat supplier non Halal '
+        # MANUF NON HALAL + SUPPLIER BELUM HALAL
+        elif status_halal_m == 'Non Halal' and ('Non Halal'not in list3 and 'Belum Halal' in list3) :
+            print(9)
+            status_produk = 'Non Halal'
+            catatan = 'Produk tidak halal dan terdapat supplier yang belum tersertifikasi halal'
+        print('status prod',status_produk)
+        getproduk.catatan  = catatan
+        getproduk.save()
+        return render(request, 'base/awalan.html', {
+            'getproduk': getproduk,
+            'nama_produk': q_raw, 
+            'status_produk' : status_produk
+                # tampilkan apa yg diketik/terbaca
+        })
     if not getproduk:
         messages.error(
             request,
             'Produk tidak ditemukan.' if q else 'QR tidak terbaca atau kosong.'
         )
 
-    return render(request, 'base/awalan.html', {
-        'getproduk': getproduk,
-        'nama_produk': q_raw,   # tampilkan apa yg diketik/terbaca
-    })
+        return render(request, 'base/awalan.html', {
+            'getproduk': getproduk,
+            'nama_produk': q_raw, 
+           
+                # tampilkan apa yg diketik/terbaca
+        })
     
 # def awal(request):
 #     # Hanya me-return halaman statis, tanpa mengakses database atau logic kompleks
@@ -164,10 +229,10 @@ def create_manufaktur(request):
         alamat = request.POST["alamat"]
         jenis_produk = request.POST["jenis_produk"]
         status_halal = request.POST["status_halal"]
-        if status_halal == 'True' :
-            status_halal = True
-        else :
-            status_halal = False
+        # if status_halal == 'True' :
+        #     status_halal = True
+        # else :
+        #     status_halal = False
         contact = request.POST["contact"]
         # tanggal_dibuat = request.POST["tanggal_dibuat"]
         catatan_regis = request.POST["catatan_regis"]
@@ -249,14 +314,17 @@ def create_manufaktur(request):
     
 @login_required(login_url="login")  
 @role_required(['auditor','admin'])
-def update_status(request,id) :
+def update_status(request,id,value) :
     getmanufaktur = models.Manufaktur.objects.get(id_manufaktur = id)
-    if getmanufaktur.status_halal == True :
-        getmanufaktur.status_halal = False
+    if value == 'Halal' :
+        getmanufaktur.status_halal = 'Halal'
+    elif value == 'Non Halal' :
+        getmanufaktur.status_halal = 'Non Halal'
     else :
-        getmanufaktur.status_halal = False
+        getmanufaktur.status_halal = 'Belum Halal'
     getmanufaktur.save()
     return redirect('read_manufaktur')
+
 @login_required(login_url="login")
 @role_required(['auditor','admin'])
 def update_status2(request,id) :
@@ -292,10 +360,6 @@ def update_manufaktur(request, id):
         alamat = request.POST["alamat"]
         jenis_produk = request.POST["jenis_produk"]
         status_halal = request.POST["status_halal"]
-        if status_halal == "True" :
-            status_halal = True
-        else :
-            status_halal = False
         contact = request.POST["contact"]
         # tanggal_dibuat = request.POST["tanggal_dibuat"]
         catatan_regis = request.POST["catatan_regis"]
@@ -703,17 +767,11 @@ def create_supplier(request):
                           'manufakturobj' : manufakturobj,
                       })
     else :
-      
-        
         id_manufaktur = request.POST["id_manufaktur"]
         nama_supplier = request.POST["nama_supplier"]
         jenis_bahanbaku = request.POST["jenis_bahanbaku"]
         asal_bahan = request.POST["asal_bahan"]
         status_halal = request.POST["status_halal"]
-        if status_halal == 'True' :
-            status_halal = True
-        else :
-            status_halal = False
         supplierobj = models.Supplier.objects.filter(nama_supplier=nama_supplier,jenis_bahanbaku=jenis_bahanbaku)
        
 
@@ -784,13 +842,16 @@ def update_supplier(request, id):
         return redirect('read_supplier')
     
 @login_required(login_url="login") 
-@role_required(['auditor','manufaktur'])
-def update_status3(request,id) :
+# @role_required(['auditor','manufaktur'])
+def update_status3(request,id,value) :
     getsupplier = models.Supplier.objects.get(id_supplier = id)
-    if getsupplier.status_halal == True :
-        getsupplier.status_halal = False
+    if value == 'Halal' :
+        getsupplier.status_halal = 'Halal'
+    elif value == 'Non Halal' :
+        getsupplier.status_halal = 'Non Halal'
     else :
-        getsupplier.status_halal = False
+        getsupplier.status_halal = 'Belum Halal'
+   
     getsupplier.save()
     return redirect('read_supplier')
 
@@ -1114,7 +1175,7 @@ def hasil_halal(request) :
     username = user.username
     manufakturobj = models.Manufaktur.objects.all()
      # 🔹 Bagian POST untuk update catatan produk
-    if request.method == "POST":
+    if request.method == "POST": 
         id_produk = request.POST.get("id_produk")
         catatan = request.POST.get("catatan", "")
 
@@ -1136,17 +1197,75 @@ def hasil_halal(request) :
         else :
             produkobj = models.Produk.objects.filter(id_manufaktur__username = filterumkm)
     
+    print('PROD',produkobj)
     list1 = []
     for i in produkobj :
         list2 = []
         id_produk = i.id_produk
-        filterprodsup = models.DetailProdukSupplier.objects.filter(id_produk_supplier__id_produk =id_produk )
+        getproduk = models.Produk.objects.get(id_produk = id_produk)
+        filterprodsup = models.DetailProdukSupplier.objects.filter(id_produk_supplier__id_produk =id_produk)
 
         list2.append(i)
         list2.append(filterprodsup)
-        jumlah_supplier_halal = models.DetailProdukSupplier.objects.filter(id_produk_supplier__id_produk =id_produk,id_supplier__status_halal = True).count()
-        list2.append(jumlah_supplier_halal)
 
+        jumlah_supplier_halal = models.DetailProdukSupplier.objects.filter(id_produk_supplier__id_produk =id_produk,id_supplier__status_halal = 'Halal').count()
+
+        status_halal_m = i.id_manufaktur.status_halal
+        list3 = []
+        for x in filterprodsup :
+            list3.append(x.id_supplier.status_halal)
+    #    MANUF HALAL + SUPPLIER HALAL
+        if status_halal_m == 'Halal' and ('Non Halal' not in list3 and 'Belum Halal' not in list3):
+            print(1)
+            status_produk = 'Halal'
+        
+        #  MANUF HALAL + SUPPLIER NON HALAL
+        elif status_halal_m == 'Halal' and 'Non Halal' in list3  :
+            print(2)
+            status_produk = 'Non Halal'
+            catatan = 'Mohon ganti bahan baku produksi/ ulang pengajuan sertifikasi halal produk menjadi produk Non Halal'
+        #  MANUF HALAL + SUPPLIER BELUM HALAL
+        elif status_halal_m == 'Halal' and ('Non Halal'not in list3 and 'Belum Halal' in list3) :
+            print(3)
+            status_produk = 'Halal'
+            catatan = 'Terdapat supplier yang belum tersertifikasi halal!'
+        
+        # MANUF BELUM HALAL + SUPPLIER HALAL
+        elif status_halal_m == 'Belum Halal' and ('Non Halal'not in list3 and 'Belum Halal' not in list3) :
+            print(4)
+            status_produk = 'Halal'
+            catatan = 'Mohon segera menerbitkan sertifikasi Halal'
+        # MANUF BELUM HALAL + SUPPLIER NON HALAL
+        elif status_halal_m == 'Belum Halal' and 'Non Halal' in list3 :
+            print(5)
+            status_produk = 'Non Halal'
+            catatan = 'Mohon ganti bahan baku produksi/ ulang pengajuan sertifikasi halal produk menjadi produk Non Halal'
+        # MANUF BELUM HALAL + SUPPLIER BELUM HALAL
+        elif status_halal_m == 'Belum Halal' and ('Non Halal'not in list3 and 'Belum Halal' in list3) :
+            print(6)
+            status_produk = 'Non Halal'
+            catatan = 'Produk tidak halal dan supplier belum tersertifikasi halal!'
+        
+        # MANUF NON HALAL + SUPPLIER HALAL
+        elif status_halal_m == 'Non Halal' and ('Non Halal'not in list3 and 'Belum Halal' not in list3) :
+            print(7)
+            status_produk = 'Non Halal'
+            catatan = 'Produk tidak halal walaupun seluruh bahan baku halal'
+        # MANUF NON HALAL + SUPPLIER NON HALAL
+        elif status_halal_m == 'Non Halal' and 'Non Halal' in list3 :
+            print(8)
+            status_produk = 'Non Halal'
+            catatan = ' Produk tidak halal serta terdapat supplier non Halal '
+        # MANUF NON HALAL + SUPPLIER BELUM HALAL
+        elif status_halal_m == 'Non Halal' and ('Non Halal'not in list3 and 'Belum Halal' in list3) :
+            print(9)
+            status_produk = 'Non Halal'
+            catatan = 'Produk tidak halal dan terdapat supplier yang belum tersertifikasi halal'
+        print('status prod',status_produk)
+        getproduk.catatan  = catatan
+        getproduk.save()
+        list2.append(jumlah_supplier_halal)
+        list2.append(status_produk)
         list1.append(list2)
     print('tes', list1)
     return render(request,'hasil/hasil_halal.html',{

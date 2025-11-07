@@ -29,7 +29,7 @@
               <button type="submit" class="btn btn-primary btn-sm">
                 <i class="mdi mdi-check"></i> Submit
               </button>
-              <a href="{% url 'read_hasil' %}" class="btn btn-secondary btn-sm">
+              <a href="{% url 'hasil_halal' %}" class="btn btn-secondary btn-sm">
                 <i class="mdi mdi-refresh"></i> Clear
               </a>
             </div>
@@ -43,6 +43,7 @@
               <tr>
                 <th class="text-center">No</th>
                 <th class="text-center">Produk</th>
+                <th class="text-center">Status Halal Produk</th>
                 <th class="text-center">UMKM</th>
                 <th class="text-center">Status Halal UMKM</th>
                 <th class="text-center">Supplier</th>
@@ -60,7 +61,7 @@
                 <tr>
                   <td class="text-center">{{ forloop.counter }}</td>
                   <td class="text-center">{{ item.0.nama_produk }}</td>
-
+                  <td>{{item.3}}</td>
                   <td class="text-center">
                     {% for item2 in item.1 %}
                       <ul class="mb-1"><li>{{ item2.id_produk_supplier.id_produk.id_manufaktur.nama_usaha }}</li></ul>
@@ -69,7 +70,7 @@
 
                   <td class="text-center">
                     {% for item2 in item.1 %}
-                      <ul class="mb-1"><li>{% if item2.id_produk_supplier.id_produk.id_manufaktur.status_halal == True %} Halal {% else %} Non-Halal {% endif %}</li></ul>
+                      <ul class="mb-1"><li>{{ item2.id_produk_supplier.id_produk.id_manufaktur.status_halal}}</li></ul>
                     {% endfor %}
                   </td>
                   <td class="text-center">
@@ -80,13 +81,13 @@
                   
                   <td class="text-center">
                       {% for item2 in item.1 %}
-                      <ul class="mb-1"><li>{% if item2.id_supplier.status_halal == True %} Halal {% else %} Non-Halal {% endif %}</li></ul>
+                      <ul class="mb-1"><li>{{item2.id_supplier.status_halal}}</li></ul>
                       {% endfor %}
                     </td>
                     
               <td class="text-center">{{ item.2 }}</td>
               <td class="text-center">
-                {% if item.0.catatan %}{{ item.0.catatan }} {% else %} - {% endif %}</td>
+                {{ item.0.catatan }}</td>
                  {% if admin or auditor %}
  <td style="min-width:260px; white-space:nowrap;">
   <form method="post" action="" class="d-flex align-items-center gap-2 mb-0 w-100">
