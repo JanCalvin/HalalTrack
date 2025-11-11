@@ -109,6 +109,8 @@ def awal(request):
           )
           .first()
       )
+        if not getproduk :
+            return redirect('awal')
         id_produk = getproduk.id_produk
         filterprodsup = models.DetailProdukSupplier.objects.filter(id_produk_supplier__id_produk =id_produk)
        
