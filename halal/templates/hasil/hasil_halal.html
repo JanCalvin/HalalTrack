@@ -1,6 +1,13 @@
 {% extends "base/base.html" %}
 
 {% block content %}
+<style>
+  td.catatan-cell {
+    white-space: normal !important;
+    word-wrap: break-word;
+    max-width: 350px;   /* atur batas lebar */
+  }
+</style>
 
 <!-- Page header di luar card, sama seperti template 'Data supplier' -->
 <div class="page-header">
@@ -44,15 +51,12 @@
                 <th class="text-center">No</th>
                 <th class="text-center">Produk</th>
                 <th class="text-center">Status Halal Produk</th>
-                <th class="text-center">UMKM</th>
-                <th class="text-center">Status Halal UMKM</th>
-                <th class="text-center">Supplier</th>
-                <th class="text-center">Status Halal Supplier</th>
-                <th class="text-center">Jumlah Supplier Halal</th>
-                <th class="text-center">Catatan</th>
-                {% if admin or auditor %}
-                <th class="text-center">Input Catatan</th>
-                {% endif %}
+              
+                <th class="text-center">Catatan Produk</th>
+                <th class="text-center">Catatan Auditor</th>
+                <th class="text-center">Verifikasi Auditor</th>
+                <th class="text-center">Detail</th>
+               
               </tr>
             </thead>
 
@@ -62,48 +66,32 @@
                   <td class="text-center">{{ forloop.counter }}</td>
                   <td class="text-center">{{ item.0.nama_produk }}</td>
                   <td>{{item.3}}</td>
+                 
+              <td class="catatan-cell">
+                {% if item.0.catatan %}
+                {{ item.0.catatan }}
+              {% else %}
+              -
+              {% endif %}
+              </td>
+               
+                <td class="catatan-cell">
+                  {% if item.1.catatan_auditor %}{{ item.1.catatan_auditor }}{% else %}-{% endif %}</td>
                   <td class="text-center">
-                    {% for item2 in item.1 %}
-                      <ul class="mb-1"><li>{{ item2.id_produk_supplier.id_produk.id_manufaktur.nama_usaha }}</li></ul>
-                    {% endfor %}
+                    {% if item.1.verifikasi_auditor %}
+                    Verif
+                    {% else %}
+                    Belum Verif
+                    {% endif %}
                   </td>
+                 
+                <td class="text-center">
+                  <a class="btn btn-outline-info btn-sm" href="{% url 'diagram' item.0.id_produk %}">
+                    Lihat Diagram
+</a>
 
-                  <td class="text-center">
-                    {% for item2 in item.1 %}
-                      <ul class="mb-1"><li>{{ item2.id_produk_supplier.id_produk.id_manufaktur.status_halal}}</li></ul>
-                    {% endfor %}
-                  </td>
-                  <td class="text-center">
-                    {% for item2 in item.1 %}
-                      <ul class="mb-1"><li>{{ item2.id_supplier.nama_supplier }}</li></ul>
-                    {% endfor %}
-                  </td>
-                  
-                  <td class="text-center">
-                      {% for item2 in item.1 %}
-                      <ul class="mb-1"><li>{{item2.id_supplier.status_halal}}</li></ul>
-                      {% endfor %}
-                    </td>
-                    
-              <td class="text-center">{{ item.2 }}</td>
-              <td class="text-center">
-                {{ item.0.catatan }}</td>
-                 {% if admin or auditor %}
- <td style="min-width:260px; white-space:nowrap;">
-  <form method="post" action="" class="d-flex align-items-center gap-2 mb-0 w-100">
-    {% csrf_token %}
-    <input type="hidden" name="id_produk" value="{{ item.0.id_produk }}">
-
-    <input name="catatan"
-           type="text"
-           class="form-control form-control-sm"
-           placeholder="Tulis catatan..."
-           style="flex:1; min-width:150px;">
-
-    <button class="btn btn-primary btn-sm" type="submit">Simpan</button>
-  </form>
 </td>
-{% endif %}
+             
 
                  
                 </tr>

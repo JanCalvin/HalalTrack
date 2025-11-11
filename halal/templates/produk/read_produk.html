@@ -35,7 +35,8 @@
                                 <th>Manufaktur</th>
                                 <th>ID Produk</th>
                                 <th>Nama Produk</th>
-                                <th>Status Analisis </th>
+                                <th>Status Halal </th>
+                                <th class="text-center">Ubah Status </th>
                                 <th>Tanggal Generate</th>
                                 <th>Qr Code</th>      
                                   {% if manufaktur or auditor %}
@@ -51,7 +52,31 @@
                                 <td>{{item.id_manufaktur.nama_usaha}}</td>
                                 <td>{{item.id_produk}}</td>
                                 <td>{{item.nama_produk}}</td>
-                                <td>{{item.status_analisis}}</td>
+                                <td>{{item.status_halal}}</td>
+                                  <td>
+                                    
+                                    <a href="{% url 'update_status' item.id_produk 'Halal' %}">
+    <button type="button"
+                                        class="btn btn-inverse-primary btn-sm btn-icon-text mt-2 open-status-modal"
+                                        >
+                                   Halal
+                                </button>
+                                    </a>
+                                    <a href="{% url 'update_status' item.id_produk 'Non Halal' %}">
+    <button type="button"
+                                        class="btn btn-inverse-warning btn-sm btn-icon-text mt-2 open-status-modal"
+                                        >
+                                   Non-Halal
+                                </button>
+                                    </a>
+                                    <a href="{% url 'update_status' item.id_produk 'Belum Halal' %}">
+    <button type="button"
+                                        class="btn btn-inverse-info btn-sm btn-icon-text mt-2 open-status-modal"
+                                        >
+                                    Belum Halal
+                                </button>
+                                    </a>
+                                    </td>
                                 <td>{{item.tanggal_generate}}</td>
                                 <td>
                                     <img src="{{ item.qr_code }}" alt="QR" class="qr-img">

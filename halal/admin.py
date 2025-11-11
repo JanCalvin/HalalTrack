@@ -4,10 +4,9 @@ from . import models
 
 admin.site.register(models.Manufaktur)
 admin.site.register(models.Produk)
-admin.site.register(models.Supplier)
+admin.site.register(models.BahanBaku)
 admin.site.register(models.ProdukSupplier)
 admin.site.register(models.DetailProdukSupplier)
 admin.site.register(models.LPHAdmin)
 admin.site.register(models.LPHAuditor)
-admin.site.register(models.LogSistem)
-admin.site.register(models.KeputusanSistem)
+

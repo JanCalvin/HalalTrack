@@ -7,10 +7,10 @@
   <h1 class="page-title">Data Detail Produk</h1>
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{% url 'read_prodsup' %}">Data Detail Produk</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'read_detail' %}">Data Detail Produk</a></li>
       {% if manufaktur %}
       <li class="breadcrumb-item active" aria-current="page">
-        <a class="text-muted" href="{% url 'create_prodsup' %}">Create Detail Produk</a>
+        <a class="text-muted" href="{% url 'create_detail' %}">Create Detail Produk</a>
       </li>
       {% endif %}
     </ol>
@@ -26,8 +26,8 @@
         <form method="get" class="forms-sample mb-4">
           <div class="row align-items-end g-2">
             <div class="col-md-4">
-              <label for="manufaktur" class="form-label">UMKM</label>
-              <select name="manufaktur" id="manufaktur" class="form-control">
+              <label for="filtermanufaktur" class="form-label">UMKM</label>
+              <select name="filtermanufaktur" id="filtermanufaktur" class="form-control">
                 {% for i in manufakturobj %}
                   <option value="{{ i.username }}" {% if manufaktur == i.username %}selected{% endif %}>
                     {{ i.nama_usaha }}
@@ -39,7 +39,7 @@
               <button type="submit" class="btn btn-primary btn-sm">
                 <i class="mdi mdi-check"></i> Submit
               </button>
-              <a href="{% url 'read_prodsup' %}" class="btn btn-secondary btn-sm">
+              <a href="{% url 'read_detail' %}" class="btn btn-secondary btn-sm">
                 <i class="mdi mdi-refresh"></i> Clear
               </a>
             </div>
@@ -83,12 +83,12 @@
                     {% for item2 in item.1 %}
                       <ul class="mb-1">
                         <li>
-                          <a href="{% url 'update_prodsup' item2.id_detail_produk_supplier %}">
+                          <a href="{% url 'update_detail' item2.id_detail_produk_supplier %}">
                             <button class="btn btn-inverse-warning btn-sm btn-icon-text">Update</button>
                           </a>
                         </li>
                         <li class="mt-1">
-                          <a href="{% url 'delete_prodsup' item2.id_detail_produk_supplier %}">
+                          <a href="{% url 'delete_detail' item2.id_detail_produk_supplier %}">
                             <button class="btn btn-inverse-danger btn-sm btn-icon-text">Delete</button>
                           </a>
                         </li>

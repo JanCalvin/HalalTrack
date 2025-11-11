@@ -2,12 +2,12 @@
 
 {% block content %}
 <div class="page-header">
-    <h1 class="page-title">Data supplier</h1>
+    <h1 class="page-title">Data Bahan Baku</h1>
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item "><a href="{% url 'read_supplier' %}">Data supplier</a></li>
+            <li class="breadcrumb-item "><a href="{% url 'read_bahanbaku' %}">Data Bahan Baku</a></li>
               {% if manufaktur or auditor %}
-          <li class="breadcrumb-item active " aria-current="page" ><a class="text-muted" href="{% url 'create_supplier' %}">Create supplier</a></li>
+          <li class="breadcrumb-item active " aria-current="page" ><a class="text-muted" href="{% url 'create_bahanbaku' %}">Create Bahan Baku</a></li>
           {% endif %}
         </ol>
       </nav>
@@ -25,52 +25,49 @@
                             <tr>
                                 <th>No</th>
                                 <th>Manufaktur</th>
-                                <th>Nama supplier</th>
-                                <th>Jenis BB</th>
-                                <th>Asal Bahan</th>
+                                <th>Nama Bahan Baku</th>
+                        
+                                <th>Supplier</th>
                                 
                                 <th>Status Halal</th>      
-                               {% if auditor or manufaktur %}
+                             
                                 <th>Ubah Status</th>
-                                <th class="text-center">Action</th>
-                                {% endif }
-                               
+                                <th class="text-center">Action</th>              
                             </tr>
                         </thead>
     
                         <tbody class="table-dark">
-                            {% for item in supplierobj %}
+                            {% for item in bahanbakuobj %}
                             {% with status_halal=item.status_halal %}
                             <tr >
                                 <td>{{forloop.counter}}</td>
                                 <td>{{item.id_manufaktur.nama_usaha}}</td>
+                                <td>{{item.nama_bahanbaku}}</td>
                                 <td>{{item.nama_supplier}}</td>
-                                <td>{{item.jenis_bahanbaku}}</td>
-                                <td>{{item.asal_bahan}}</td>
-                              
+                           
                                 <td>
                                     {{item.status_halal}}
                                     
                                     
                                 </td>
-                                {% if auditor or manufaktur %}
+                             
                                 <td>
                                     
-                                    <a href="{% url 'update_status3' item.id_supplier 'Halal' %}">
+                                    <a href="{% url 'update_status3' item.id_bahanbaku 'Halal' %}">
     <button type="button"
                                         class="btn btn-inverse-primary btn-sm btn-icon-text mt-2 open-status-modal"
                                         >
                                    Halal
                                 </button>
                                     </a>
-                                    <a href="{% url 'update_status3' item.id_supplier 'Non Halal' %}">
+                                    <a href="{% url 'update_status3' item.id_bahanbaku 'Non Halal' %}">
     <button type="button"
                                         class="btn btn-inverse-warning btn-sm btn-icon-text mt-2 open-status-modal"
                                         >
                                    Non-Halal
                                 </button>
                                     </a>
-                                    <a href="{% url 'update_status3' item.id_supplier 'Belum Halal' %}">
+                                    <a href="{% url 'update_status3' item.id_bahanbaku 'Belum Halal' %}">
     <button type="button"
                                         class="btn btn-inverse-info btn-sm btn-icon-text mt-2 open-status-modal"
                                         >
@@ -79,10 +76,10 @@
                                     </a>
                                     </td>
                                 <td>
-                                    <a href="{% url 'update_supplier' item.id_supplier %}" ><Button class="btn btn-inverse-warning btn-sm btn-icon-text">Update</Button></a>
-                                    <a href="{% url 'delete_supplier' item.id_supplier %}"><Button class="btn btn-inverse-danger btn-sm btn-icon-text">Delete</Button></a>
+                                    <a href="{% url 'update_bahanbaku' item.id_bahanbaku %}" ><Button class="btn btn-inverse-warning btn-sm btn-icon-text">Update</Button></a>
+                                    <a href="{% url 'delete_bahanbaku' item.id_bahanbaku %}"><Button class="btn btn-inverse-danger btn-sm btn-icon-text">Delete</Button></a>
                                 </td>
-                               {% endif %}
+
                             </tr>
                    
                             {% endwith %}

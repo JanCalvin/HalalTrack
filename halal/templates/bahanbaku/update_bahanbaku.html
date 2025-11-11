@@ -1,0 +1,63 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Update Data</h1>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item active " aria-current="page" ><a class="text-muted" href="{% url 'read_bahanbaku' %}">Data bahanbaku</a></li>
+        </ol>
+      </nav>
+</div>
+<div class="row">
+    
+    <div class="col-lg-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+    
+                <form class="form-sample" method="post">
+                    {% csrf_token %}
+                   
+                    
+                    <div class="form-group row">
+                        <label for="id_manufaktur"  class="col-sm-3 col-form-label">Manufaktur</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="id_manufaktur" id="id_manufaktur" class="form-control" placeholder="Nama manufaktur" value="{{request.user.username}}" readonly>
+                        </div>
+                    </div>
+       
+                    <div class="form-group row">
+                        <label for="nama_bahanbaku"  class="col-sm-3 col-form-label">Nama bahanbaku</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="nama_bahanbaku" id="nama_bahanbaku" class="form-control" placeholder="Nama Bahan Baku"value="{{getbahanbaku.nama_bahanbaku}}" required>
+                        </div>
+                    </div>
+            
+                   
+            
+                        <div class="form-group row">
+                        <label for="nama_supplier"  class="col-sm-3 col-form-label">Supplier</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="nama_supplier" id="nama_supplier" class="form-control"required value="{{getbahanbaku.nama_supplier}}">
+                        </div>
+                    </div>
+                     <div class="form-group row">
+                        <label for="status_halal" class="col-sm-3 col-form-label">Status Halal</label>
+                        <div class="col-sm-9">
+                             <select class="form-control" name="status_halal" id="status_halal" required>
+                             <option value="Halal" {% if getbahanbaku.status_halal == "Halal" %} selected {% endif %}>Halal</option>
+                            <option value="Non Halal" {% if getbahanbaku.status_halal == "Non Halal" %} selected {% endif %}>Non Halal</option>
+                            <option value="Belum Halal" {% if getbahanbaku.status_halal == "Belum Halal" %} selected {% endif %}>Belum Halal</option>
+                        </select>
+
+                        </div>
+                    </div>
+                         
+                    
+                    <button type="submit"class="btn btn-primary mr-2">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

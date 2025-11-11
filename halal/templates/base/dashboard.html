@@ -2,132 +2,175 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Meta tag yang diperlukan -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <title>Bumi Aji</title>
+
   <!-- plugins:css -->
   <link rel="stylesheet" href="{% static 'assets/vendors/mdi/css/materialdesignicons.min.css' %}">
   <link rel="stylesheet" href="{% static 'assets/vendors/css/vendor.bundle.base.css' %}">
-  <!-- endinject -->
-  <!-- Plugin css untuk halaman ini -->
   <link rel="stylesheet" href="{% static 'assets/vendors/jvectormap/jquery-jvectormap.css' %}">
   <link rel="stylesheet" href="{% static 'assets/vendors/flag-icon-css/css/flag-icon.min.css' %}">
   <link rel="stylesheet" href="{% static 'assets/vendors/owl-carousel-2/owl.carousel.min.css' %}">
   <link rel="stylesheet" href="{% static 'assets/vendors/owl-carousel-2/owl.theme.default.min.css' %}">
   <link rel="stylesheet" href="{% static 'assets/vendors/datatables.net-bs4/dataTables.bootstrap4.css' %}">
-  <!-- End plugin css untuk halaman ini -->
-  <!-- inject:css -->
-  <!-- endinject -->
   <!-- Layout styles -->
   <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
-  <!-- End layout styles -->
   <link rel="shortcut icon" href="{% static 'assets/images/favicon.png' %}">
   <link href="{% static 'assets/vendors/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+
+  <style>
+    /* ===== Ringkasan Operasional ===== */
+    .summary-wrap{ padding:8px 0 20px; }
+    .summary-title{ font-weight:600; margin-bottom:10px; }
+    .summary-row{
+      display:flex; align-items:center; gap:10px;
+      background:rgba(255,255,255,.08); border-radius:10px;
+      padding:8px 14px; margin:10px 0;
+    }
+    .dot{ width:8px; height:8px; border-radius:50%; background:#bfbfbf; display:inline-block; }
+    .label{ flex:1; }
+    .sep{ opacity:.7; }
+    .value{ min-width:64px; text-align:right; font-weight:600; }
+
+    /* Biar jarak kiri konsisten antarkartu */
+    .grid-eq-pad > [class*="col-"]{ padding-left:12px; padding-right:12px; }
+
+    /* Canvas chart responsive dengan tinggi tetap */
+    .chart-box{ position:relative; width:100%; height:340px; }
+    .chart-card .card-body{ padding:18px; }
+  </style>
 </head>
-<style>
-  .custom-chart {
-      width: 100% !important;
-      height: 400px !important; 
-  }
-</style>
 <body>
-    <div class="container-scroller">
-      {% include 'base/sidebar.html' %}
-      <div class="container-fluid page-body-wrapper">
-        {% include 'base/navbar.html' %}
-        <div class="main-panel">
-          <div class="content-wrapper">
-            {% include 'base/messages.html' %}
-            <div class="page-header">
-                <h1 class="page-title">Dashboard</h1>
-            </div>
-             
-            <div class="row">
-                    <div class="col-lg-12 grid-margin stretch-card">
-                        <div class="card">
-                            <div class="card-body">
-                <canvas style="width: 200px; height: 400px;" id="myChart"></canvas>
-                            </div>
-                        </div>  
-                    </div>
-            </div>
-           
-      
-            </div>
+  <div class="container-scroller">
+    {% include 'base/sidebar.html' %}
+    <div class="container-fluid page-body-wrapper">
+      {% include 'base/navbar.html' %}
+      <div class="main-panel">
+        <div class="content-wrapper">
+          {% include 'base/messages.html' %}
+
+          <div class="page-header">
+            <h1 class="page-title">Dashboard</h1>
           </div>
+
+          <div class="row grid-eq-pad">
+            <div class="col-lg-12 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <!-- ===== Ringkasan Operasional ===== -->
+                  <div class="summary-wrap">
+                    <div class="summary-title">Ringkasan Operasional</div>
+                    {% if auditor or admin %}
+                    <div class="summary-row">
+                      <span class="dot"></span>
+                      <span class="label">Total UMKM Terdaftar</span>
+                      <span class="sep">:</span>
+                      <span class="value">{{ total_umkm|default:0 }}</span>
+                    </div>
+{% endif %}
+                    <div class="summary-row">
+                      <span class="dot"></span>
+                      <span class="label">Produk Tersimpan Dalam Sistem</span>
+                      <span class="sep">:</span>
+                      <span class="value">{{ total_produk|default:0 }}</span>
+                    </div>
+
+                    <div class="summary-row">
+                      <span class="dot"></span>
+                      <span class="label">Produk Terverifikasi Halal</span>
+                      <span class="sep">:</span>
+                      <span class="value">{{ terverifikasi_halal|default:0 }}</span>
+                    </div>
+
+                    <div class="summary-row">
+                      <span class="dot"></span>
+                      <span class="label">Produk Belum Verifikasi</span>
+                      <span class="sep">:</span>
+                      <span class="value">{{ menunggu_verifikasi|default:0 }}</span>
+                    </div>
+
+                    <div class="summary-row">
+                      <span class="dot"></span>
+                      <span class="label">Produk Tidak Memenuhi Halal</span>
+                      <span class="sep">:</span>
+                      <span class="value">{{ tidak_memenuhi|default:0 }}</span>
+                    </div>
+                  </div>
+
+                  <!-- ===== Chart ===== -->
+                 <div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="card">
+      <div class="card-body">
+        <h6 class="text-center mb-3">Distribusi Status Kepatuhan Produk</h6>
+        <div class="chart-box d-flex justify-content-center">
+          <canvas id="statusChart"></canvas>
         </div>
       </div>
     </div>
-</body>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  const ctx = document.getElementById('myChart').getContext('2d');
+  </div>
+</div>
 
-  // ambil data dari Django context; default 0 biar aman
-  const jumlahHalal = {{ halal|default:0 }};
-  const jumlahNonHalal = {{ nonhalal|default:0 }};
+                  <!-- /Chart -->
 
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: ['Halal', 'Non Halal'],
-      datasets: [{
-        label: 'Jumlah UMKM',
-        data: [jumlahHalal, jumlahNonHalal],
-        backgroundColor: [
-          'rgba(46, 204, 113, 0.2)',   // Halal
-          'rgba(231, 76, 60, 0.2)'     // Non Halal
-        ],
-        borderColor: [
-          'rgba(46, 204, 113, 1)',
-          'rgba(231, 76, 60, 1)'
-        ],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false, // gunakan tinggi dari .custom-chart
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { precision: 0 } // biar integer
-        }
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y}`
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div> <!-- /.content-wrapper -->
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const el = document.getElementById('statusChart');
+    if (el){
+      const dataHalal = {{ terverifikasi_halal|default:0 }};
+      const dataPerlu = {{ menunggu_verifikasi|default:0 }};
+      const dataTidak = {{ tidak_memenuhi|default:0 }};
+
+      new Chart(el.getContext('2d'), {
+        type: 'pie',
+        data: {
+          labels: ['Halal', 'Perlu Verifikasi', 'Tidak Halal'],
+          datasets: [{
+            data: [dataHalal, dataPerlu, dataTidak],
+            backgroundColor: ['#f1a20b', '#55c1ff', '#6bd6b3'],   // warna mendekati contoh
+            borderColor: 'rgba(0,0,0,0.15)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` ${ctx.label}: ${ctx.parsed}`
+              }
+            }
           }
         }
-      }
+      });
     }
-  });
-</script>
+  </script>
 
-    <!-- jQuery pertama kali -->
-    <script src="{% static 'assets/vendors/jquery/jquery.min.js' %}"></script>
-    <script src="{% static 'assets/js/vendor.bundle.base.js' %}"></script>
-
-    <!-- DataTables -->
-    <script src="{% static 'assets/vendors/datatables/jquery.dataTables.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/datatables/dataTables.bootstrap4.min.js' %}"></script>
-    <!-- Plugin js untuk halaman ini -->
-    <script src="{% static 'assets/vendors/progressbar.js/progressbar.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/jvectormap/jquery-jvectormap.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/jvectormap/jquery-jvectormap-world-mill-en.js' %}"></script>
-    <script src="{% static 'assets/vendors/owl-carousel-2/owl.carousel.min.js' %}"></script>
-    <!-- End plugin js untuk halaman ini -->
-    <!-- inject:js -->
-    <script src="{% static 'assets/js/off-canvas.js' %}"></script>
-    <script src="{% static 'assets/js/hoverable-collapse.js' %}"></script>
-    <script src="{% static 'assets/js/misc.js' %}"></script>
-    <script src="{% static 'assets/js/settings.js' %}"></script>
-    <script src="{% static 'assets/js/todolist.js' %}"></script>
-    <!-- endinject -->
-    <!-- Custom js untuk halaman ini -->
-    <script src="{% static 'assets/js/dashboard.js' %}"></script>
+  <!-- Vendor scripts -->
+  <script src="{% static 'assets/vendors/jquery/jquery.min.js' %}"></script>
+  <script src="{% static 'assets/js/vendor.bundle.base.js' %}"></script>
+  <script src="{% static 'assets/vendors/datatables/jquery.dataTables.min.js' %}"></script>
+  <script src="{% static 'assets/vendors/datatables/dataTables.bootstrap4.min.js' %}"></script>
+  <script src="{% static 'assets/vendors/progressbar.js/progressbar.min.js' %}"></script>
+  <script src="{% static 'assets/vendors/jvectormap/jquery-jvectormap.min.js' %}"></script>
+  <script src="{% static 'assets/vendors/jvectormap/jquery-jvectormap-world-mill-en.js' %}"></script>
+  <script src="{% static 'assets/vendors/owl-carousel-2/owl.carousel.min.js' %}"></script>
+  <script src="{% static 'assets/js/off-canvas.js' %}"></script>
+  <script src="{% static 'assets/js/hoverable-collapse.js' %}"></script>
+  <script src="{% static 'assets/js/misc.js' %}"></script>
+  <script src="{% static 'assets/js/settings.js' %}"></script>
+  <script src="{% static 'assets/js/todolist.js' %}"></script>
+</body>
 </html>

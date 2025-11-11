@@ -48,18 +48,20 @@
                                 <th>No</th>
                                 {% if is_admin %}
                                 <th>Nama Admin</th>
-                                {% else %}
-                                <th>Nama Auditor</th>
                                 {% endif %}
+                      
+                                <th>Nama Auditor</th>
                                 <th>Nama Usaha</th>
                                 <th>Jenis Produk</th>
                                 <th>Alamat</th>
                                 <th>Contact</th>
                                 <th>Email</th>
+                                <th>FILE</th>
+                               
                                 <th>Username</th>
-                                <th>Status Halal</th>
+                               
                                 {% if auditor or admin %}
-                                <th>Ubah Status</th>
+                 
                                 <th>Status Akun|Ubah Status</th>
                                 {% endif %}
                                 <th>Tanggal Dibuat</th>
@@ -72,67 +74,60 @@
     
                         <tbody class="table-dark">
                             {% for item in manufakturobj %}
-                            {% with status_akun=item.status_akun status_halal=item.status_halal %}
+                            {% with status_akun=item.status_akun %}
                             <tr  class="{% if not status_akun  %}table-danger{% endif %}">
                                 <td>{{forloop.counter}}</td>
                                  {% if is_admin %}
                                 <td>{{item.id_lph_admin}}</td>
-                                {% else %}
-                                <td>{{item.id_lph_auditor}}</td>
                                 {% endif %}
+                             
+                                <td>{{item.id_lph_auditor}}</td>
                                 <td>{{item.nama_usaha}}</td>
                                 <td>{{item.jenis_produk}}</td>
                                 <td>{{item.alamat}}</td>
                                 <td>{{item.contact}}</td>
                                 <td>{{item.email}}</td>
+                                <td>
+                                  {% if item.ktp %}
+                                  <a href="{{item.ktp}}"  target="_blank">
+                                    <button class="btn btn-inverse-primary">KTP</button>
+                                </a>
+                                {% endif %}
+                                 {% if item.nib %}
+                                  <a href="{{item.nib}}"  target="_blank">
+                                    <button class="btn btn-inverse-info">NIB</button>
+                                </a>
+                                {% endif %}
+                                </td>
                                 <td>{{item.username}}</td>
             
                                 
                                  {% if auditor or admin %}
-                                <td>
-                                     {{item.status_halal}}
-                                    
-                                  </td>
-                                  <td>
-                                      <a href="{% url 'update_status' item.id_manufaktur 'Halal' %}">
-    <button type="button"
-                                          class="btn btn-inverse-primary btn-sm btn-icon-text mt-2 open-status-modal"
-                                          >
-                                      Halal
-                                  </button>
-                                      </a>
-                                      <a href="{% url 'update_status' item.id_manufaktur 'Non Halal' %}">
-    <button type="button"
-                                          class="btn btn-inverse-warning btn-sm btn-icon-text mt-2 open-status-modal"
-                                          >
-                                      Non Halal
-                                  </button>
-                                      </a>
-                                      <a href="{% url 'update_status' item.id_manufaktur 'Belum Halal' %}">
-    <button type="button"
-                                          class="btn btn-inverse-info btn-sm btn-icon-text mt-2 open-status-modal"
-                                          >
-                                     Belum Halal
-                                  </button>
-                                      </a>
-
-                                    </td>
+                               
+                            
                                 <td>
                                     {% if status_akun %}
                                     Aktif
+                                    <a href="{% url 'update_status2' item.id_manufaktur %}">
+   <button type="button"
+                                           class="btn btn-inverse-primary btn-sm btn-icon-text mt-2 open-status-modal"
+                                           >
+                                       Update Status
+                                   </button>
+                                       </a>
                                     {% else %}
-                                    Tidak Halal
+                                    Tidak Aktif
+                                        <a href="{% url 'update_manufaktur' item.id_manufaktur %}">
+   <button type="button"
+                                           class="btn btn-inverse-primary btn-sm btn-icon-text mt-2 open-status-modal"
+                                           >
+                                       Update Status
+                                   </button>
+                                       </a>
                                     {% endif %}
                                 
                               
-
-                                 <a href="{% url 'update_status2' item.id_manufaktur %}">
-<button type="button"
-                                        class="btn btn-inverse-primary btn-sm btn-icon-text mt-2 open-status-modal"
-                                        >
-                                    Update Status
-                                </button>
-                                    </a>
+                                    
                                 </td>
                                 {% endif %}
                                   <td>{{item.tanggal_dibuat}}</td>

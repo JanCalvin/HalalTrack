@@ -1,0 +1,170 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+  /* Ukuran baris bahan (agar koordinat garis stabil) */
+  .trace-row        { height: 72px; display:flex; align-items:center; }
+  .trace-box        { background: var(--card, #0f1419); border-radius: 10px; padding: 10px 14px; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+  .trace-badge      { margin-left: 10px; }
+  .trace-col-left   { position: relative; }
+  .trace-svg        { position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none; }
+  .trace-prod-box   { min-width: 260px; }
+  .stroke-solid     { stroke-width: 2.2; stroke-linecap: round; }
+  .stroke-dashed    { stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 8 6; }
+</style>
+<style>
+  /* Besarin card form dan kontrol */
+  .auditor-card { max-width: 820px; margin-left: 10px; }   /* tengah + lebar */
+  .auditor-card .card-body { padding: 28px 28px; }
+</style>
+
+<div class="page-header">
+  <h1 class="page-title">Diagram Keterlacakan Produk</h1>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'hasil_halal' %}">Hasil Sistem</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ getproduk.nama_produk }}</li>
+    </ol>
+  </nav>
+</div>
+
+<div class="row">
+  <div class="col-lg-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+
+        <!-- Grid dua kolom: kiri bahan, kanan produk -->
+        <div class="row">
+          <!-- KIRI: daftar bahan -->
+      <div class="col-md-7 trace-col-left" id="left-col">
+  <!-- SVG kosong: garis akan digambar via JS -->
+  <svg class="trace-svg" id="trace-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+
+  {% for b in bahan_list %}
+    <div class="trace-row" data-line="{{ b.line_style }}">
+      <div class="trace-box d-flex align-items-center justify-content-between w-100">
+        <div>{{ b.nama }}</div>
+        <span class="trace-badge {{ b.badge }}">{{ b.letter }}</span>
+      </div>
+    </div>
+  {% empty %}
+    <div class="alert alert-secondary mb-0">Belum ada bahan baku untuk produk ini.</div>
+  {% endfor %}
+</div>
+
+<div class="col-md-5 d-flex align-items-center">
+  <div class="ms-md-4 trace-box trace-prod-box" id="prod-box">
+    <div class="d-flex justify-content-between align-items-center">
+      <h5 class="mb-1">Manufaktur (Produk)</h5>
+      <span class="{{ prod_badge }}">{{ prod_letter }}</span>
+    </div>
+    <div class="text-muted">Nama Produk: <strong>{{ getproduk.nama_produk }}</strong></div>
+  </div>
+</div>
+
+
+        <hr class="my-4">
+
+        <div class="small text-muted">
+          Keterangan status: <span class="badge bg-success">H</span> Halal,
+          <span class="badge bg-warning text-dark">B</span> Belum Halal,
+          <span class="badge bg-danger">N</span> Non-Halal.
+          Garis putus-putus menandakan status “Belum Halal”.
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% if auditor %}
+<div class="row mt-4">
+  <div class="col-lg-12 grid-margin stretch-card">
+    <div class="card auditor-card">
+      <div class="card-body">
+        <h5 class="mb-3">Catatan & Verifikasi Auditor</h5>
+
+        <form method="post" class="form-sample">
+          {% csrf_token %}
+          <input type="hidden" name="id_produk" value="{{ getproduk.id_produk }}">
+
+          <div class="form-group row">
+             <label class="col-md-4 col-form-label" for="catatan">Catatan</label>
+            <input name="catatan"
+                   type="text"
+                   class="form-control"
+                   placeholder="Tulis catatan…"
+                   value="{{ produk.catatan_auditor|default_if_none:'' }}">
+          </div>
+          <div class="form-group row">
+             <label class="col-sm-3 col-form-label" for="verif">Verif</label>
+            <select name="verif" class="form-control">
+              <option value="True" {% if produk and produk.verifikasi_auditor %}selected{% endif %}>Sudah diverifikasi</option>
+              <option value="False" {% if produk and not produk.verifikasi_auditor %}selected{% endif %}>Belum diverifikasi</option>
+            </select>
+          </div>
+
+       
+        
+            <button class="btn btn-primary w-100" type="submit">Simpan</button>
+      
+        </form>
+
+        {% if not produk %}
+          <div class="alert alert-warning mt-3 mb-0">
+            Belum ada <code>ProdukSupplier</code> untuk produk ini. Buat dulu lewat menu Detail Produk agar catatan & verifikasi dapat disimpan.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const leftCol = document.getElementById('left-col');
+  const prodBox = document.getElementById('prod-box');
+  const svg = document.getElementById('trace-svg');
+  if (!leftCol || !prodBox || !svg) return;
+
+  // set ukuran SVG agar menutup kolom kiri
+  const leftRect = leftCol.getBoundingClientRect();
+  svg.setAttribute('width', leftRect.width);
+  svg.setAttribute('height', leftRect.height);
+  svg.setAttribute('viewBox', `0 0 ${leftRect.width} ${leftRect.height}`);
+
+  const prodRect = prodBox.getBoundingClientRect();
+  // titik tujuan: pusat vertikal kotak produk, sedikit melewati batas kanan kolom kiri
+  const targetX = leftRect.width + Math.min(40, leftRect.width * 0.08);
+  const targetY = (prodRect.top + prodRect.height/2) - leftRect.top;
+
+  // gambar satu titik hub (opsional)
+  // const hub = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  // hub.setAttribute('cx', targetX);
+  // hub.setAttribute('cy', targetY);
+  // hub.setAttribute('r', 3);
+  // hub.setAttribute('fill', 'currentColor');
+  // svg.appendChild(hub);
+
+  const rows = leftCol.querySelectorAll('.trace-row');
+  rows.forEach(row => {
+    const r = row.getBoundingClientRect();
+    const y = (r.top + r.height/2) - leftRect.top;
+    const x1 = Math.max(0, leftRect.width - 16); // mulai dari dekat tepi kanan kiri-col
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', x1);
+    line.setAttribute('y1', y);
+    line.setAttribute('x2', targetX);
+    line.setAttribute('y2', targetY);
+    line.setAttribute('stroke', 'currentColor');
+    line.setAttribute('stroke-width', '2.2');
+    line.setAttribute('stroke-linecap', 'round');
+    if ((row.dataset.line || '').toLowerCase() === 'dashed') {
+      line.setAttribute('stroke-dasharray', '8 6');
+    }
+    svg.appendChild(line);
+  });
+});
+</script>
+
+{% endblock %}

@@ -113,10 +113,10 @@ def awal(request):
         filterprodsup = models.DetailProdukSupplier.objects.filter(id_produk_supplier__id_produk =id_produk)
        
 
-        status_halal_m = getproduk.id_manufaktur.status_halal
+        status_halal_m = getproduk.status_halal
         list3 = []
         for x in filterprodsup :
-            list3.append(x.id_supplier.status_halal)
+            list3.append(x.id_bahanbaku.status_halal)
     #    MANUF HALAL + SUPPLIER HALAL
         if status_halal_m == 'Halal' and ('Non Halal' not in list3 and 'Belum Halal' not in list3):
             print(1)
@@ -182,7 +182,7 @@ def awal(request):
         return render(request, 'base/awalan.html', {
             'getproduk': getproduk,
             'nama_produk': q_raw, 
-           
+            
                 # tampilkan apa yg diketik/terbaca
         })
     
@@ -198,13 +198,23 @@ def read_manufaktur(request) :
     print('filtermanufaktur',filtermanufaktur)
     user = request.user
     is_admin = user.groups.filter(name__iexact='admin').exists()
-    if filtermanufaktur == '' or filtermanufaktur == 'All' :
-        manufakturobj = models.Manufaktur.objects.all()
-        print('halo',manufakturobj)
-    elif filtermanufaktur == 'True' :
-        manufakturobj = models.Manufaktur.objects.filter(status_akun=True)
+    is_manufaktur = user.groups.filter(name__iexact='manufaktur').exists()
+    is_auditor = user.groups.filter(name__iexact='auditor').exists()
+    if is_admin :
+        if filtermanufaktur == '' or filtermanufaktur == 'All' :
+            manufakturobj = models.Manufaktur.objects.all()
+            print('halo',manufakturobj)
+        elif filtermanufaktur == 'True' :
+            manufakturobj = models.Manufaktur.objects.filter(status_akun=True)
+        else :
+            manufakturobj = models.Manufaktur.objects.filter(status_akun=False)
+
+    # HARUS DIPIKIRIN LAGI ISINYA APA 
+    elif is_manufaktur :
+        manufakturobj = models.Manufaktur.objects.get(username=user.username)
     else :
-        manufakturobj = models.Manufaktur.objects.filter(status_akun=False)
+        manufakturobj = models.Manufaktur.objects.filter(id_lph_auditor__username=user.username)
+        
     if not manufakturobj.exists():
         messages.error(request, "Data manufaktur Tidak Ditemukan!")
     return render(request, 'manufaktur/read_manufaktur.html', {'manufakturobj': manufakturobj,'filtermanufaktur':filtermanufaktur,'is_admin' : is_admin})
@@ -217,10 +227,12 @@ def create_manufaktur(request):
     user = request.user
     username = user.username
     is_admin = user.groups.filter(name__iexact='admin').exists()
-    
+    auditorobj = models.LPHAuditor.objects.all()
     if request.method == "GET":
         return render(request, 
-                      'manufaktur/create_manufaktur.html', {'is_admin' :is_admin})
+                      'manufaktur/create_manufaktur.html', {'is_admin' :is_admin,
+                      'auditorobj' : auditorobj
+                      })
     else :
       
         id_lph_auditor = request.POST.get("id_lph_auditor",'')
@@ -228,7 +240,29 @@ def create_manufaktur(request):
         nama_usaha = request.POST["nama_usaha"]
         alamat = request.POST["alamat"]
         jenis_produk = request.POST["jenis_produk"]
-        status_halal = request.POST["status_halal"]
+        ktp  = request.FILES.get("ktp")
+        nib  = request.FILES.get("nib")
+        if ktp :
+            try:
+                # Upload ke Supabase Storage -> dapat public URL
+                public_url = upload_file_and_get_url(ktp, folder="ktp")
+            
+            except Exception as e:
+                messages.error(request, f"Gagal upload file: {e}")
+                return render(request, "manufaktur/create_manufaktur.html")
+        else :
+            public_url = None
+        if nib :
+            try:
+                # Upload ke Supabase Storage -> dapat public URL
+                public_url2 = upload_file_and_get_url(nib, folder="nib")
+            except Exception as e:
+                messages.error(request, f"Gagal upload file: {e}")
+                return render(request, "manufaktur/create_manufaktur.html")
+        else :
+            public_url2 = None
+
+
         # if status_halal == 'True' :
         #     status_halal = True
         # else :
@@ -251,7 +285,7 @@ def create_manufaktur(request):
             messages.error(request, "Username sudah ada!")
             return render(request, "manufaktur/create_manufaktur.html", {
                  "prefill": {"username": username, "email": email, "group": group_val}
-            })
+            })  
         if manufakturobj.exists():
             messages.error(request, "manufaktur sudah ada")
             return redirect("create_manufaktur")
@@ -259,14 +293,16 @@ def create_manufaktur(request):
             if is_admin :
                 models.Manufaktur(
                     id_lph_admin=models.LPHAdmin.objects.get(username = id_lph_admin),
+                    id_lph_auditor=models.LPHAuditor.objects.get(username = id_lph_auditor),
                     nama_usaha=nama_usaha,
                     alamat=alamat,
                     jenis_produk=jenis_produk,
-                    status_halal=status_halal,
+                
                     contact=contact,
                     email=email,
                     username=username,
-    
+                    ktp = public_url,
+                    nib = public_url2,
                     catatan_regis=catatan_regis,
                     status_akun = True
                 ).save()
@@ -276,7 +312,7 @@ def create_manufaktur(request):
                     nama_usaha=nama_usaha,
                     alamat=alamat,
                     jenis_produk=jenis_produk,
-                    status_halal=status_halal,
+                
                     contact=contact,
                     email=email,
                     username=username,
@@ -311,19 +347,71 @@ def create_manufaktur(request):
 
             messages.success(request, "Data Manufaktur Berhasil Ditambahkan!")
         return redirect("read_manufaktur")
-    
-@login_required(login_url="login")  
-@role_required(['auditor','admin'])
-def update_status(request,id,value) :
-    getmanufaktur = models.Manufaktur.objects.get(id_manufaktur = id)
-    if value == 'Halal' :
-        getmanufaktur.status_halal = 'Halal'
-    elif value == 'Non Halal' :
-        getmanufaktur.status_halal = 'Non Halal'
+
+
+def pendaftaran_mitra(request) :
+    if request.method == 'GET' : 
+        return render(request,'manufaktur/pendaftaran.html')
     else :
-        getmanufaktur.status_halal = 'Belum Halal'
-    getmanufaktur.save()
-    return redirect('read_manufaktur')
+        nama_usaha = request.POST["nama_usaha"]
+        alamat = request.POST["alamat"]
+        jenis_produk = request.POST["jenis_produk"]
+        email      = (request.POST.get("email") or "").strip()
+        ktp  = request.FILES.get("ktp")
+        nib  = request.FILES.get("nib")
+        try:
+            # Upload ke Supabase Storage -> dapat public URL
+            public_url = upload_file_and_get_url(ktp, folder="ktp")
+          
+        except Exception as e:
+            messages.error(request, f"Gagal upload file: {e}")
+            return render(request, "manufaktur/create_manufaktur.html")
+        try:
+            # Upload ke Supabase Storage -> dapat public URL
+            public_url2 = upload_file_and_get_url(nib, folder="nib")
+        except Exception as e:
+            messages.error(request, f"Gagal upload file: {e}")
+            return render(request, "manufaktur/create_manufaktur.html")
+
+
+        # if status_halal == 'True' :
+        #     status_halal = True
+        # else :
+        #     status_halal = False
+        contact = request.POST["contact"]
+        # tanggal_dibuat = request.POST["tanggal_dibuat"]
+
+        
+        
+        models.Manufaktur(
+            nama_usaha=nama_usaha,
+            alamat=alamat,
+            jenis_produk=jenis_produk,
+        
+            contact=contact,
+            email=email,
+            ktp = public_url,
+            nib = public_url2,
+
+            status_akun = False
+        ).save()
+
+        return redirect('awal')
+
+
+
+@login_required(login_url="login")  
+@role_required(['manufaktur'])
+def update_status(request,id,value) :
+    getproduk = models.Produk.objects.get(id_produk = id)
+    if value == 'Halal' :
+        getproduk.status_halal = 'Halal'
+    elif value == 'Non Halal' :
+        getproduk.status_halal = 'Non Halal'
+    else :
+        getproduk.status_halal = 'Belum Halal'
+    getproduk.save()
+    return redirect('read_produk')
 
 @login_required(login_url="login")
 @role_required(['auditor','admin'])
@@ -340,63 +428,139 @@ def update_status2(request,id) :
 @role_required(['auditor','admin'])
 def update_manufaktur(request, id):
     getmanufaktur = models.Manufaktur.objects.get(id_manufaktur=id)
+    auditorobj = models.LPHAuditor.objects.all()
+    status_akun = getmanufaktur.status_akun
+    tgl1 = getmanufaktur.tanggal_dibuat.strftime('%Y-%m-%d')
     username1 =getmanufaktur.username
-    getuser = User.objects.get(username=username1)
-    if request.method == 'GET':
-        status_halal = getmanufaktur.status_halal
-        status_akun = getmanufaktur.status_akun
-        tgl1 = getmanufaktur.tanggal_dibuat.strftime('%Y-%m-%d')
-        return render(request, 'manufaktur/update_manufaktur.html', {
-            'status_halal': status_halal,
+    user = request.user
+    is_admin = user.groups.filter(name__iexact='admin').exists()
+    if username1 :
+        getuser = User.objects.get(username=username1)
+        context_data = {
+
             'status_akun': status_akun,
             'getmanufaktur': getmanufaktur,
+            'auditorobj': auditorobj,
             'getuser': getuser,
             'id': id,
+            'tgl1': tgl1,   
+        }
+    else :
+        context_data = {
+
+            'status_akun': status_akun,
+            'getmanufaktur': getmanufaktur,
+            'auditorobj': auditorobj,
+        
+            'id': id,
             'tgl1': tgl1,
-        })
+        }
+    if request.method == 'GET':
+        return render(request, 'manufaktur/update_manufaktur.html',context_data)
 
     else:
+        id_lph_auditor = request.POST.get("id_lph_auditor",'')
+        id_lph_admin = request.POST.get("id_lph_admin",'')
         nama_usaha = request.POST["nama_usaha"]
         alamat = request.POST["alamat"]
         jenis_produk = request.POST["jenis_produk"]
-        status_halal = request.POST["status_halal"]
+        ktp  = request.FILES.get("ktp")
+        nib  = request.FILES.get("nib")
         contact = request.POST["contact"]
         # tanggal_dibuat = request.POST["tanggal_dibuat"]
         catatan_regis = request.POST["catatan_regis"]
         username   = (request.POST.get("username") or "").strip()
         email      = (request.POST.get("email") or "").strip()
-        password = (request.POST.get("email") or "").strip()
+        password = (request.POST.get("password") or "").strip()
         if models.Manufaktur.objects.filter(nama_usaha=nama_usaha,username=username,contact=contact).exclude(id_manufaktur = id).exists() :
             messages.error(request,"Manufaktur sudah ada!")
             return render(request, 'manufaktur/update_manufaktur.html')
 
+        if is_admin :
+            getmanufaktur.id_lph_admin = models.LPHAdmin.objects.get(username = id_lph_admin)
+            getmanufaktur.id_lph_auditor = models.LPHAuditor.objects.get(username = id_lph_auditor)
+        else : 
+            getmanufaktur.id_lph_auditor = id_lph_auditor
+
         getmanufaktur.nama_usaha = nama_usaha
         getmanufaktur.alamat = alamat
         getmanufaktur.jenis_produk = jenis_produk
-        getmanufaktur.status_halal = status_halal
+        getmanufaktur.status_akun = True
+
         # getmanufaktur.public_url = public_url
         getmanufaktur.email = email
         getmanufaktur.username = username
         # getmanufaktur.tanggal_dibuat = tanggal_dibuat
         getmanufaktur.catatan_regis = catatan_regis
-
-        if User.objects.filter(username__iexact=username,groups__name__iexact = 'manufaktur').exclude(pk=getuser.id).exists() :
-            messages.error(request, "Username sudah ada!")
-            return render(request, "manufaktur/update_manufaktur.html", {
-                 "prefill": {"username": username, "email": email, }
-            })
+        if ktp :
+            try : 
+                if getmanufaktur.ktp :
+                    try:
+                        delete_file_by_public_url(getmanufaktur.ktp)
+                    except Exception as e:
+                        # tidak fatal; beri info kalau mau
+                        print("Gagal hapus file lama:", e)
+                new_url = upload_file_and_get_url(ktp, folder="ktp")
+                getmanufaktur.ktp = new_url
+            except Exception as e:
+                messages.error(request, f"Gagal proses file: {e}")
+                return render(request, "manufaktur/update_manufaktur.html", {"getmanufaktur": getmanufaktur, "id": id})
+        if nib :
+            try : 
+                if getmanufaktur.nib :
+                    try:
+                        delete_file_by_public_url(getmanufaktur.nib)
+                    except Exception as e:
+                        # tidak fatal; beri info kalau mau
+                        print("Gagal hapus file lama:", e)
+                new_url2 = upload_file_and_get_url(nib, folder="nib")
+                getmanufaktur.nib = new_url2
+            except Exception as e:
+                messages.error(request, f"Gagal proses file: {e}")
+                return render(request, "manufaktur/update_manufaktur.html", {"getmanufaktur": getmanufaktur, "id": id})
         
-        
-        getuser.username = username
-        getuser.email = email
-        if password:                     # hanya kalau diisi
-            getuser.set_password(password)   # <-- PENTING: hash password
-        # kalau yang diubah adalah user yang sedang login sendiri:
-            if request.user.pk == getuser.pk:
-            # jaga sesi tetap valid setelah ganti password
-                update_session_auth_hash(request, getuser)
+        if username1 :
+            if User.objects.filter(username__iexact=username,groups__name__iexact = 'manufaktur').exclude(pk=getuser.id).exists() :
+                messages.error(request, "Username sudah ada!")
+                return render(request, "manufaktur/update_manufaktur.html", {
+                    "prefill": {"username": username, "email": email, }
+                })
+            getuser.username = username
+            getuser.email = email
+            if password:                     # hanya kalau diisi
+                getuser.set_password(password)   # <-- PENTING: hash password
+            # kalau yang diubah adalah user yang sedang login sendiri:
+                if request.user.pk == getuser.pk:
+                # jaga sesi tetap valid setelah ganti password
+                    update_session_auth_hash(request, getuser)
+            getuser.save()
+        else : 
+            group_val  = 'manufaktur'
+            group = None
+            if group_val:
+                # Coba sebagai ID dulu
+                try:
+                    group = Group.objects.get(name=group_val)
+                except (ValueError, Group.DoesNotExist):
+                    # Bukan ID, coba sebagai nama
+                    group, _ = Group.objects.get_or_create(name=group_val)
+            try:
+                with transaction.atomic():
+                    user = User.objects.create_user(
+                        username=username, password=password, email=email
+                    )
+                    if group:
+                        user.groups.add(group)
 
-        getuser.save()
+                messages.success(request, "Akun berhasil dibuat. Silakan login. ")
+            
+            except Exception as e:
+                messages.error(request, f"Gagal membuat akun: {e}")
+                return render(request, "manufaktur/updte_manufaktur.html", {
+                    "prefill": {"username": username, "email": email, "group": group_val}
+                })
+
+        
 
         getmanufaktur.save()
 
@@ -408,7 +572,13 @@ def update_manufaktur(request, id):
 def delete_manufaktur(request,id) :
     getmanufaktur = models.Manufaktur.objects.get(id_manufaktur=id)
     username = getmanufaktur.username
-    User.objects.filter(username__iexact=username,groups__name__iexact = 'manufaktur').delete()
+    User.objects.filter(username=username,groups__name__iexact = 'manufaktur').delete()
+    url = getmanufaktur.ktp
+    url2 = getmanufaktur.nib
+    if url :
+        delete_file_by_public_url(url)
+    if url2 :
+        delete_file_by_public_url(url2)
     getmanufaktur.delete()
     messages.success(request, "Data berhasil dihapus!")
     return redirect('read_manufaktur')
@@ -525,11 +695,11 @@ def update_auditor(request, id):
         username   = (request.POST.get("username") or "").strip()
         email      = (request.POST.get("email") or "").strip()
         password = (request.POST.get("email") or "").strip()
-        if models.auditor.objects.filter(nama_auditor=nama_auditor,jabatan=jabatan,nomor_telepon=nomor_telepon).exclude(id_lph_auditor = id).exists() :
+        if models.LPHAuditor.objects.filter(nama_auditor=nama_auditor,jabatan=jabatan,nomor_telepon=nomor_telepon).exclude(id_lph_auditor = id).exists() :
             messages.error(request,"auditor sudah ada!")
             return render(request, 'auditor/update_auditor.html')
 
-        getauditor.id_lph_auditor = models.LPHAdmin.objects.get(id_lph_admin=id_lph_admin)
+        getauditor.id_lph_admin = models.LPHAdmin.objects.get(username=id_lph_admin)
         getauditor.nama_auditor = nama_auditor
         getauditor.jabatan = jabatan
         getauditor.nomor_telepon = nomor_telepon
@@ -740,19 +910,19 @@ def delete_admin(request,id) :
 
 '''CRUD Supplier'''
 @login_required(login_url="login")
-@role_required(['admin','auditor','manufaktur'])
-def read_supplier(request) :
+@role_required(['manufaktur'])
+def read_bahanbaku(request) :
    
     user = request.user
-    # is_supplier = user.groups.filter(name__iexact='supplier').exists()
-    supplierobj = models.Supplier.objects.all()
-    if not supplierobj.exists():
-        messages.error(request, "Data supplier Tidak Ditemukan!")
-    return render(request, 'supplier/read_supplier.html', {'supplierobj': supplierobj})
+    # is_bahanbaku = user.groups.filter(name__iexact='bahanbaku').exists()
+    bahanbakuobj = models.BahanBaku.objects.filter(id_manufaktur__username = user.username)
+    if not bahanbakuobj.exists():
+        messages.error(request, "Data bahanbaku Tidak Ditemukan!")
+    return render(request, 'bahanbaku/read_bahanbaku.html', {'bahanbakuobj': bahanbakuobj})
 
 @login_required(login_url="login")
-@role_required(['auditor','manufaktur'])
-def create_supplier(request):
+@role_required(['manufaktur'])
+def create_bahanbaku(request):
     # groupobj = Group.objects.all().order_by('name')
     user = request.user
     username = user.username
@@ -761,57 +931,56 @@ def create_supplier(request):
     manufakturobj = models.Manufaktur.objects.all()
     if request.method == "GET":
         return render(request, 
-                      'supplier/create_supplier.html',{
+                      'bahanbaku/create_bahanbaku.html',{
                           'is_admin' : is_admin,
                           'is_auditor' : is_auditor,
                           'manufakturobj' : manufakturobj,
                       })
     else :
         id_manufaktur = request.POST["id_manufaktur"]
-        nama_supplier = request.POST["nama_supplier"]
-        jenis_bahanbaku = request.POST["jenis_bahanbaku"]
-        asal_bahan = request.POST["asal_bahan"]
-        status_halal = request.POST["status_halal"]
-        supplierobj = models.Supplier.objects.filter(nama_supplier=nama_supplier,jenis_bahanbaku=jenis_bahanbaku)
+        nama_bahanbaku = request.POST["nama_bahanbaku"]
        
+        nama_supplier = request.POST["nama_supplier"]
+        status_halal = request.POST["status_halal"]
 
-        if supplierobj.exists():
-            messages.error(request, "Supplier sudah ada")
-            return redirect("create_supplier")
+        bahanbakuobj = models.BahanBaku.objects.filter(nama_bahanbaku=nama_bahanbaku,nama_supplier=nama_supplier)
+       
+        if bahanbakuobj.exists():
+            messages.error(request, "bahanbaku sudah ada")
+            return redirect("create_bahanbaku")
         else:
             
-            models.Supplier(
+            models.BahanBaku(
 
                 id_manufaktur=models.Manufaktur.objects.get(username = id_manufaktur),
+                nama_bahanbaku=nama_bahanbaku,
                 nama_supplier=nama_supplier,
-                jenis_bahanbaku=jenis_bahanbaku,
-                asal_bahan=asal_bahan,
                 status_halal=status_halal,
             ).save()
         
           
-            messages.success(request, "Data supplier Berhasil Ditambahkan!")
-        return redirect("read_supplier")
+            messages.success(request, "Data Bahan Baku Berhasil Ditambahkan!")
+        return redirect("read_bahanbaku")
 
 
 @login_required(login_url="login")
-@role_required(['auditor','manufaktur'])
-def update_supplier(request, id):
-    getsupplier = models.Supplier.objects.get(id_supplier=id)
+@role_required(['manufaktur'])
+def update_bahanbaku(request, id):
+    getbahanbaku = models.BahanBaku.objects.get(id_bahanbaku=id)
     # getauditor = models.LPHAuditor.objects.all()
-    manufakturobj = models.Manufaktur.objects.all()
+    # manufakturobj = models.Manufaktur.objects.all()
     user = request.user
     username = user.username
-    is_admin = user.groups.filter(name__iexact='admin').exists()
-    is_auditor = user.groups.filter(name__iexact='auditor').exists()
+    # is_admin = user.groups.filter(name__iexact='admin').exists()
+    # is_auditor = user.groups.filter(name__iexact='auditor').exists()
     if request.method == 'GET':
        
-        return render(request, 'supplier/update_supplier.html', {
+        return render(request, 'bahanbaku/update_bahanbaku.html', {
         
-            'getsupplier': getsupplier,
-            'manufakturobj': manufakturobj,
-            'is_admin': is_admin,
-            'is_auditor': is_auditor,
+            'getbahanbaku': getbahanbaku,
+            # 'manufakturobj': manufakturobj,
+            # 'is_admin': is_admin,
+            # 'is_auditor': is_auditor,
             # 'getauditor': getauditor,
             'id': id,
         })
@@ -819,58 +988,61 @@ def update_supplier(request, id):
     else:
  
         id_manufaktur = request.POST["id_manufaktur"]
+        nama_bahanbaku = request.POST["nama_bahanbaku"]
         nama_supplier = request.POST["nama_supplier"]
-        jenis_bahanbaku = request.POST["jenis_bahanbaku"]
-        asal_bahan = request.POST["asal_bahan"]
         status_halal = request.POST["status_halal"]
         if status_halal == 'True' :
             status_halal = True
         else :
             status_halal = False
-        if models.Supplier.objects.filter(nama_supplier=nama_supplier,jenis_bahanbaku=jenis_bahanbaku).exclude(id_supplier = id).exists() :
-            messages.error(request,"supplier sudah ada!")
-            return render(request, 'supplier/update_supplier.html')
+        if models.BahanBaku.objects.filter(nama_bahanbaku=nama_bahanbaku,nama_supplier=nama_supplier).exclude(id_bahanbaku = id).exists() :
+            messages.error(request,"bahanbaku sudah ada!")
+            return render(request, 'bahanbaku/update_bahanbaku.html')
 
        
-        getsupplier.id_manufaktur = models.Manufaktur.objects.get(username = id_manufaktur)
-        getsupplier.nama_supplier = nama_supplier
-        getsupplier.jenis_bahanbaku = jenis_bahanbaku
-        getsupplier.asal_bahan = asal_bahan
-        getsupplier.status_halal = status_halal
-        getsupplier.save()
-        messages.success(request, "Data supplier berhasil diperbarui!")
-        return redirect('read_supplier')
+        getbahanbaku.id_manufaktur = models.Manufaktur.objects.get(username = id_manufaktur)
+        getbahanbaku.nama_bahanbaku = nama_bahanbaku
+        getbahanbaku.nama_supplier = nama_supplier
+        getbahanbaku.status_halal = status_halal
+        getbahanbaku.save()
+        messages.success(request, "Data bahanbaku berhasil diperbarui!")
+        return redirect('read_bahanbaku')
     
 @login_required(login_url="login") 
-@role_required(['auditor','manufaktur'])
+@role_required(['manufaktur'])
 def update_status3(request,id,value) :
-    getsupplier = models.Supplier.objects.get(id_supplier = id)
+    getbahanbaku = models.BahanBaku.objects.get(id_bahanbaku = id)
     if value == 'Halal' :
-        getsupplier.status_halal = 'Halal'
+        getbahanbaku.status_halal = 'Halal'
     elif value == 'Non Halal' :
-        getsupplier.status_halal = 'Non Halal'
+        getbahanbaku.status_halal = 'Non Halal'
     else :
-        getsupplier.status_halal = 'Belum Halal'
+        getbahanbaku.status_halal = 'Belum Halal'
    
-    getsupplier.save()
-    return redirect('read_supplier')
+    getbahanbaku.save()
+    return redirect('read_bahanbaku')
 
 @login_required(login_url="login")
-@role_required(['auditor','manufaktur'])
-def delete_supplier(request,id) :
-    getsupplier = models.Supplier.objects.get(id_supplier=id)
-    getsupplier.delete()
+@role_required(['manufaktur'])
+def delete_bahanbaku(request,id) :
+    getbahanbaku = models.BahanBaku.objects.get(id_bahanbaku=id)
+    getbahanbaku.delete()
     messages.success(request, "Data berhasil dihapus!")
-    return redirect('read_supplier')
+    return redirect('read_bahanbaku')
 
 '''CRUD produk'''
 @login_required(login_url="login")
-@role_required(['admin','auditor','manufaktur'])
+@role_required(['manufaktur'])
 def read_produk(request) :
    
-    # user = request.user
+    user = request.user
     # is_produk = user.groups.filter(name__iexact='produk').exists()
-    produkobj = models.Produk.objects.all()
+    is_manufaktur = user.groups.filter(name__iexact='manufaktur').exists()
+    if is_manufaktur :
+
+        produkobj = models.Produk.objects.filter(id_manufaktur__username = user.username)
+    else :
+        produkobj = models.Produk.objects.all()
     if not produkobj.exists():
         messages.error(request, "Data produk Tidak Ditemukan!")
     return render(request, 'produk/read_produk.html', {'produkobj': produkobj})
@@ -892,7 +1064,7 @@ def create_produk(request):
     # POST
     id_manufaktur = request.POST["id_manufaktur"]          # ini username manufaktur (sesuai kodenmu)
     nama_produk    = request.POST["nama_produk"].strip()
-    status_analisis = request.POST["status_analisis"].strip()
+    status_halal = request.POST["status_halal"].strip()
 
     # cek duplikat (pakai relasi username)
     produkobj = models.Produk.objects.filter(
@@ -910,7 +1082,7 @@ def create_produk(request):
     produk = models.Produk(
         id_manufaktur=manuf,
         nama_produk=nama_produk,
-        status_analisis=status_analisis,
+        status_halal=status_halal,
     )
     produk.save()
 
@@ -940,7 +1112,7 @@ def create_produk(request):
 
 
 @login_required(login_url="login")
-@role_required(['auditor','manufaktur'])
+@role_required(['manufaktur'])
 def update_produk(request, id):
     getproduk = models.Produk.objects.get(id_produk=id)
     # getauditor = models.LPHAuditor.objects.all()
@@ -963,7 +1135,7 @@ def update_produk(request, id):
  
         id_manufaktur = request.POST["id_manufaktur"]
         nama_produk = request.POST["nama_produk"]
-        status_analisis = request.POST["status_analisis"]
+        status_halal = request.POST["status_halal"]
         if models.Produk.objects.filter(nama_produk=nama_produk,id_manufaktur__username=id_manufaktur).exclude(id_produk = id).exists() :
             messages.error(request,"Produk sudah ada!")
             return render(request, 'produk/update_produk.html')
@@ -971,7 +1143,7 @@ def update_produk(request, id):
        
         getproduk.id_manufaktur = models.Manufaktur.objects.get(username = id_manufaktur)
         getproduk.nama_produk = nama_produk
-        getproduk.status_analisis = status_analisis
+        getproduk.status_halal = status_halal
 
         getproduk.save()
         messages.success(request, "Data produk berhasil diperbarui!")
@@ -993,7 +1165,7 @@ def delete_produk(request,id) :
 
 @login_required(login_url="login")
 @role_required(['admin','auditor','manufaktur'])
-def read_produk_supplier(request) : 
+def read_detail(request) : 
     user = request.user
     username = user.username
     manufaktur = request.GET.get('manufaktur','')
@@ -1011,6 +1183,7 @@ def read_produk_supplier(request) :
         # tanggal_akhir = tgl2
     else :
         allproduk_supplier = models.ProdukSupplier.objects.all()
+
     print('TES' ,allproduk_supplier)
     manufakturobj = models.Manufaktur.objects.all()
     list1 = []
@@ -1027,35 +1200,33 @@ def read_produk_supplier(request) :
         
         list1.append(list2)
     print('list1 : ',list1)
-    return render(request, "produk_supplier/read_produk_supplier.html",{
+    return render(request, "detailproduk/read_detail.html",{
         "produk_supplierobj" : list1,  
         'manufakturobj' : manufakturobj,
-        'manufaktur' : manufaktur ,
+        'filtermanufaktur' : manufaktur ,
     })
 
 @login_required(login_url="login")
 @role_required(['manufaktur'])
-def create_produk_supplier(request) :
+def create_detail(request) :
     user = request.user
     username = user.username
-    is_manufaktur = user.groups.filter(name__iexact='manufaktur').exists()
-    if is_manufaktur :
-        produkobj = models.Produk.objects.filter(id_manufaktur__username = username)
-        supplierobj = models.Supplier.objects.filter(id_manufaktur__username= username)
-    else :
-        produkobj = models.Produk.objects.all()
-        supplierobj = models.Supplier.objects.all()
+    # is_manufaktur = user.groups.filter(name__iexact='manufaktur').exists()
+    # if is_manufaktur :
+    produkobj = models.Produk.objects.filter(id_manufaktur__username = username)
+    bahanbakuobj = models.BahanBaku.objects.filter(id_manufaktur__username= username)
+    # else :
+    #     produkobj = models.Produk.objects.all()
+    #     bahanbakuobj = models.Supplier.objects.all()
     if request.method == 'GET' :
-        return render (request, 'produk_supplier/create_produk_supplier.html', {
+        return render (request, "detailproduk/create_detail.html", {
             'produkobj' : produkobj,
-            'supplierobj' : supplierobj,
+            'bahanbakuobj' : bahanbakuobj,
         })
     
     else :
         id_produk = request.POST['id_produk']
-       
-        id_supplier = request.POST.getlist('id_supplier')
-        peran_supplier = request.POST.getlist('peran_supplier') 
+        id_bahanbaku = request.POST.getlist('id_bahanbaku')
         catatan_rantai_pasok = request.POST.getlist('catatan_rantai_pasok')
        
         produk_supplierobj = models.ProdukSupplier(
@@ -1065,105 +1236,169 @@ def create_produk_supplier(request) :
         produk_supplierobj.save()
 
     
-        for a, b, c in zip (id_supplier, peran_supplier, catatan_rantai_pasok):
+        for a in id_bahanbaku:
             tes = models.DetailProdukSupplier(
                 id_produk_supplier = produk_supplierobj,
-                id_supplier = models.Supplier.objects.get(
-                    id_supplier = a),
-                peran_supplier = b,
-                catatan_rantai_pasok = c,
+                id_bahanbaku = models.BahanBaku.objects.get(
+                    id_bahanbaku = a),
             )
             tes.save()
 
         
             
-        messages.success(request, "Data produk supplier berhasil ditambahkan")
-        return redirect("read_prodsup")
+        messages.success(request, "Data Detail Produk berhasil ditambahkan")
+        return redirect("read_detail")
 
 @login_required(login_url="login") 
-@role_required(['auditor','manufaktur'])
-def update_produk_supplier(request, id):
+@role_required(['manufaktur'])
+def update_detail(request, id):
     print('id',id)
     detailobj = models.DetailProdukSupplier.objects.get(id_detail_produk_supplier=id)  
     user = request.user
     username = user.username
     is_manufaktur = user.groups.filter(name__iexact='manufaktur').exists()
-    if is_manufaktur :
-        produkobj = models.Produk.objects.filter(id_manufaktur__username = username)
-        supplierobj = models.Supplier.objects.filter(id_manufaktur__username= username)
-    else :
-        produkobj = models.Produk.objects.all()
-        supplierobj = models.Supplier.objects.all()
+    produkobj = models.Produk.objects.filter(id_manufaktur__username = username)
+    bahanbakuobj = models.BahanBaku.objects.filter(id_manufaktur__username= username)
+
+    produkobj = models.Produk.objects.all()
+    bahanbakuobj = models.BahanBaku.objects.all()
     if request.method == "GET":
        
-        return render(request, "produk_supplier/update_produk_supplier.html", {
+        return render(request, "detailproduk/update_detail.html", {
             'produkobj': produkobj,
             "detailobj": detailobj,
-            "supplierobj": supplierobj,
+            "bahanbakuobj": bahanbakuobj,
             "id": id,
           
         })
     else:
         id_produk = request.POST.get('id_produk')
        
-        id_supplier = request.POST.get('id_supplier')
-        peran_supplier = request.POST.get('peran_supplier') 
-        catatan_rantai_pasok = request.POST.get('catatan_rantai_pasok')
+        id_bahanbaku = request.POST.get('id_bahanbaku')
+        # catatan_auditor = request.POST.get('catatan_auditor') 
+        # verifikasi_auditor = request.POST.get('verifikasi_auditor')
        
         
         
         detailobj.id_produk_supplier.id_produk = models.Produk.objects.get(id_produk=id_produk)
-        detailobj.id_supplier = models.Supplier.objects.get(id_supplier=id_supplier)
-        detailobj.peran_supplier = peran_supplier
-        detailobj.catatan_rantai_pasok = catatan_rantai_pasok
-
+        detailobj.id_bahanbaku = models.BahanBaku.objects.get(id_bahanbaku=id_bahanbaku)
+      
         detailobj.id_produk_supplier.save()
         detailobj.save()
 
-        messages.success(request, 'Data produk_supplier  Berhasil Diperbarui!')
-        return redirect('read_prodsup')
+        messages.success(request, 'Data Detail Produk  Berhasil Diperbarui!')
+        return redirect('read_detail')
     
 @login_required(login_url="login")
 @role_required(['manufaktur'])
-def delete_produk_supplier(request, id) :
+def delete_detail(request, id) :
     getdetailobj = models.DetailProdukSupplier.objects.get(id_detail_produk_supplier = id)
    
     getdetailobj.delete()
 
     messages.error(request, "Data produk_supplier berhasil dihapus!")
-    return redirect('read_prodsup')
+    return redirect('read_detail')
 
 @login_required(login_url="login")
-@role_required(['admin','auditor'])
-def dashboard(request) :
-
-    filterumkm_halal = models.ProdukSupplier.objects.filter(id_produk__id_manufaktur__status_halal = True)
-    filterumkm_nonhalal = models.ProdukSupplier.objects.filter(id_produk__id_manufaktur__status_halal = False)
-
+@role_required(['admin','auditor','manufaktur'])
+def dashboard(request):
+    # Ringkasan angka dasar
+    user = request.user
+    is_manufaktur = user.groups.filter(name__iexact='manufaktur').exists()
+    username = user.username
+    if is_manufaktur :
     
-    jumlah_halal = 0
-    jumlah_nonhalal = 0
-    minimal = 0.5
-    for item in filterumkm_halal :
+        total_umkm    = models.Manufaktur.objects.filter(username = username).count()
+        produk_qs     = models.Produk.objects.filter(id_manufaktur__username = username)
+    else :
+        total_umkm    = models.Manufaktur.objects.all().count()
+        produk_qs     = models.Produk.objects.all()
+    total_produk  = produk_qs.count()
 
-        id_prodsup = item.id_produk_supplier
-
-        supp_halal = models.DetailProdukSupplier.objects.filter(id_produk_supplier = id_prodsup,id_supplier__status_halal=True).count()
-
-        total_sup =  models.DetailProdukSupplier.objects.filter(id_produk_supplier = id_prodsup).count()
-        
-        
-        aktual = supp_halal/total_sup
-        
-        if aktual >= minimal :
-            jumlah_halal +=1
-        
-        else :
-            jumlah_nonhalal +=1
+    # Siapkan counter
+    terverifikasi_halal = 0
+    menunggu_verifikasi = 0
+    tidak_memenuhi      = 0
     
-    return render(request,'base/dashboard.html',{
-        'halal' : jumlah_halal,
-        'nonhalal' : jumlah_nonhalal
+
+    for i in produk_qs :
+        id_produk = i.id_produk
+        print('ID PRODU',id_produk)
+        filterprodsup = models.DetailProdukSupplier.objects.filter(id_produk_supplier__id_produk__id_produk =id_produk)
+        try :
+            blmverif1 = models.ProdukSupplier.objects.get(id_produk__id_produk = id_produk,verifikasi_auditor=False)
+            blmverif = blmverif1.count()
+        except :
+            blmverif = 0
+        menunggu_verifikasi += blmverif
+        jumlah_supplier_halal = models.DetailProdukSupplier.objects.filter(id_produk_supplier__id_produk =id_produk,id_bahanbaku__status_halal = 'Halal').count()
+        
+        status_halal_m = i.status_halal
+        list3 = []
+        for x in filterprodsup :
+            list3.append(x.id_bahanbaku.status_halal)
+    #    MANUF HALAL + SUPPLIER HALAL
+        if status_halal_m == 'Halal' and ('Non Halal' not in list3 and 'Belum Halal' not in list3):
+            print(1)
+            status_produk = 'Halal'
+            terverifikasi_halal+=1
+        #  MANUF HALAL + SUPPLIER NON HALAL
+        elif status_halal_m == 'Halal' and 'Non Halal' in list3  :
+            print(2)
+            status_produk = 'Non Halal'
+            catatan = 'Mohon ganti bahan baku produksi/ ulang pengajuan sertifikasi halal produk menjadi produk Non Halal'
+            tidak_memenuhi+=1
+        #  MANUF HALAL + SUPPLIER BELUM HALAL
+        elif status_halal_m == 'Halal' and ('Non Halal'not in list3 and 'Belum Halal' in list3) :
+            print(3)
+            status_produk = 'Halal'
+            catatan = 'Terdapat supplier yang belum tersertifikasi halal!'
+            terverifikasi_halal+=1
+        # MANUF BELUM HALAL + SUPPLIER HALAL
+        elif status_halal_m == 'Belum Halal' and ('Non Halal'not in list3 and 'Belum Halal' not in list3) :
+            print(4)
+            status_produk = 'Halal'
+            catatan = 'Mohon segera menerbitkan sertifikasi Halal'
+            terverifikasi_halal+=1
+        # MANUF BELUM HALAL + SUPPLIER NON HALAL
+        elif status_halal_m == 'Belum Halal' and 'Non Halal' in list3 :
+            print(5)
+            status_produk = 'Non Halal'
+            catatan = 'Mohon ganti bahan baku produksi/ ulang pengajuan sertifikasi halal produk menjadi produk Non Halal'
+            tidak_memenuhi+=1
+        # MANUF BELUM HALAL + SUPPLIER BELUM HALAL
+        elif status_halal_m == 'Belum Halal' and ('Non Halal'not in list3 and 'Belum Halal' in list3) :
+            print(6)
+            status_produk = 'Non Halal'
+            catatan = 'Produk tidak halal dan supplier belum tersertifikasi halal!'
+            tidak_memenuhi+=1
+        
+        # MANUF NON HALAL + SUPPLIER HALAL
+        elif status_halal_m == 'Non Halal' and ('Non Halal'not in list3 and 'Belum Halal' not in list3) :
+            print(7)
+            status_produk = 'Non Halal'
+            catatan = 'Produk tidak halal walaupun seluruh bahan baku halal'
+            tidak_memenuhi+=1
+        # MANUF NON HALAL + SUPPLIER NON HALAL
+        elif status_halal_m == 'Non Halal' and 'Non Halal' in list3 :
+            print(8)
+            status_produk = 'Non Halal'
+            catatan = ' Produk tidak halal serta terdapat supplier non Halal '
+            tidak_memenuhi+=1
+        # MANUF NON HALAL + SUPPLIER BELUM HALAL
+        elif status_halal_m == 'Non Halal' and ('Non Halal'not in list3 and 'Belum Halal' in list3) :
+            print(9)
+            status_produk = 'Non Halal'
+            catatan = 'Produk tidak halal dan terdapat supplier yang belum tersertifikasi halal'
+            tidak_memenuhi+=1
+
+
+    return render(request, 'base/dashboard.html', {
+        'total_umkm': total_umkm,
+        'total_produk': total_produk,
+        'terverifikasi_halal': terverifikasi_halal,
+        'menunggu_verifikasi': menunggu_verifikasi,
+        'tidak_memenuhi': tidak_memenuhi,
     })
 
 
@@ -1174,19 +1409,7 @@ def hasil_halal(request) :
     is_manufaktur = user.groups.filter(name__iexact='manufaktur').exists()
     username = user.username
     manufakturobj = models.Manufaktur.objects.all()
-     # 🔹 Bagian POST untuk update catatan produk
-    if request.method == "POST": 
-        id_produk = request.POST.get("id_produk")
-        catatan = request.POST.get("catatan", "")
-
-        try:
-            produk = models.Produk.objects.get(id_produk=id_produk)
-            produk.catatan = catatan
-            produk.save()
-            messages.success(request, f"Catatan untuk {produk.nama_produk} berhasil diperbarui.")
-        except models.Produk.DoesNotExist:
-            messages.error(request, "Produk tidak ditemukan.")
-        return redirect("hasil_halal")  # kembali ke halaman yang sama setelah update
+       
     if is_manufaktur :
         produkobj = models.Produk.objects.filter(id_manufaktur__username = username)
         filterumkm = ''
@@ -1204,16 +1427,16 @@ def hasil_halal(request) :
         id_produk = i.id_produk
         getproduk = models.Produk.objects.get(id_produk = id_produk)
         filterprodsup = models.DetailProdukSupplier.objects.filter(id_produk_supplier__id_produk =id_produk)
-
+        produksupplier = models.ProdukSupplier.objects.get(id_produk__id_produk = id_produk)
         list2.append(i)
-        list2.append(filterprodsup)
+        list2.append(produksupplier)
 
-        jumlah_supplier_halal = models.DetailProdukSupplier.objects.filter(id_produk_supplier__id_produk =id_produk,id_supplier__status_halal = 'Halal').count()
+        jumlah_supplier_halal = models.DetailProdukSupplier.objects.filter(id_produk_supplier__id_produk =id_produk,id_bahanbaku__status_halal = 'Halal').count()
 
-        status_halal_m = i.id_manufaktur.status_halal
+        status_halal_m = i.status_halal
         list3 = []
         for x in filterprodsup :
-            list3.append(x.id_supplier.status_halal)
+            list3.append(x.id_bahanbaku.status_halal)
     #    MANUF HALAL + SUPPLIER HALAL
         if status_halal_m == 'Halal' and ('Non Halal' not in list3 and 'Belum Halal' not in list3):
             print(1)
@@ -1274,6 +1497,71 @@ def hasil_halal(request) :
     'filterumkm' :filterumkm,
     'is_manufaktur' : is_manufaktur
 })
-           
-                
-                
+
+@login_required(login_url="login")
+@role_required(['manufaktur','admin','auditor'])
+def diagram(request,id) :
+    getproduk = models.Produk.objects.get(id_produk = id)
+    id_produk = getproduk.id_produk
+    produk = models.ProdukSupplier.objects.get(id_produk__id_produk=id_produk)
+    if request.method == 'POST' :
+        catatan = request.POST.get("catatan", "")
+        verif_str = (request.POST.get("verif") or "False").strip()
+        print('verif',verif_str)
+        verif = True if verif_str == "True" else False
+        print('verif2',verif)
+        
+        produk.catatan_auditor = catatan
+        produk.verifikasi_auditor = verif
+        produk.save()
+        messages.success(request, f"Catatan untuk {produk.id_produk.nama_produk} berhasil diperbarui.")
+        
+        return redirect("hasil_halal")  # kembali ke halaman yang sama setelah update
+    
+    detailproduk = models.DetailProdukSupplier.objects.filter(id_produk_supplier__id_produk = id_produk)
+    bahan_list = []
+    
+    for i in detailproduk :
+        bb = i.id_bahanbaku
+        letter, badge, line_style = _status_badge(getattr(bb, "status_halal", None))
+        bahan_list.append({
+            "nama": getattr(bb, "nama_bahanbaku", f"BB #{bb.pk}"),
+            "status_text": getattr(bb, "status_halal", "-"),
+            "letter": letter,
+            "badge": badge,
+            "line_style": line_style,
+        })
+       
+    prod_letter, prod_badge, _ = _status_badge(getattr(getproduk, "status_halal", None))
+
+    return render(request, "hasil/diagram.html", {
+        "getproduk": getproduk,
+        "prod_letter": prod_letter,
+        "prod_badge": prod_badge,
+        "bahan_list": bahan_list,
+        'produk' : produk
+    })
+
+      
+
+def _status_badge(status_str: str):
+    s = (status_str or "").strip().lower()
+    if s == "halal":
+        return ("H", "badge bg-success", "solid")
+    if s in ("belum halal", "belum_halal", "pending", "proses"):
+        return ("B", "badge bg-warning text-dark", "dashed")
+    if s in ("non halal", "haram", "tidak halal"):
+        return ("N", "badge bg-danger", "solid")
+    return ("-", "badge bg-secondary", "solid")
+
+@login_required(login_url="login")
+@role_required(['manufaktur','admin','auditor'])
+def update_status4(request,id) :
+    getprodsup = models.ProdukSupplier.objects.get(id_bahanbaku = id)
+    if getprodsup.verifikasi_auditor :
+        getprodsup.verifikasi_auditor = False
+    else :
+        getprodsup.verifikasi_auditor = True
+   
+    getprodsup.save()
+    return redirect('hasil_halal')

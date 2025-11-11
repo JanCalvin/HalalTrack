@@ -5,6 +5,7 @@ from django.conf.urls.static import static
 urlpatterns = [
 
         path('',views.awal, name='awal'),
+        path('pendaftaran_mitra',views.pendaftaran_mitra, name='pendaftaran_mitra'),
         path('login',views.loginview, name='login'),
         path('dashboard',views.dashboard, name='dashboard'),
       
@@ -31,20 +32,21 @@ urlpatterns = [
         path('update_admin/<str:id>',views.update_admin, name='update_admin'),
         path('delete_admin/<str:id>',views.delete_admin, name='delete_admin'),
     
-        path('read_supplier',views.read_supplier, name='read_supplier'),
-        path('create_supplier',views.create_supplier, name='create_supplier'),
-        path('update_supplier/<str:id>',views.update_supplier, name='update_supplier'),
-        path('delete_supplier/<str:id>',views.delete_supplier, name='delete_supplier'),
+        path('read_bahanbaku',views.read_bahanbaku, name='read_bahanbaku'),
+        path('create_bahanbaku',views.create_bahanbaku, name='create_bahanbaku'),
+        path('update_bahanbaku/<str:id>',views.update_bahanbaku, name='update_bahanbaku'),
+        path('delete_bahanbaku/<str:id>',views.delete_bahanbaku, name='delete_bahanbaku'),
 
         path('read_produk',views.read_produk, name='read_produk'),
         path('create_produk',views.create_produk, name='create_produk'),
         path('update_produk/<str:id>',views.update_produk, name='update_produk'),
         path('delete_produk/<str:id>',views.delete_produk, name='delete_produk'),
         
-        path('read_prodsup',views.read_produk_supplier, name='read_prodsup'),
-        path('create_prodsup',views.create_produk_supplier, name='create_prodsup'),
-        path('update_prodsup/<str:id>',views.update_produk_supplier, name='update_prodsup'),
-        path('delete_produk_supplier/<str:id>',views.delete_produk_supplier, name='delete_prodsup'),
+        path('read_detail',views.read_detail, name='read_detail'),
+        path('create_detail',views.create_detail, name='create_detail'),
+        path('update_detail/<str:id>',views.update_detail, name='update_detail'),
+        path('delete_detail/<str:id>',views.delete_detail, name='delete_detail'),
         
         path('hasil_halal',views.hasil_halal, name='hasil_halal'),
+        path("diagram/<str:id>", views.diagram, name="diagram")
 ]

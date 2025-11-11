@@ -4,7 +4,7 @@
     <div class="sidebar-brand-wrapper d-none d-lg-flex align-items-center mt-2 justify-content-center fixed-top">
   
       <a class="sidebar-brand brand-logo text-success display-1 " style="text-decoration: none;" href="#"><h3>HalTrack</h3></a>
-      <a class="sidebar-brand brand-logo-mini text-success display-1" style="text-decoration: none;" href="#"><h3>HT</h3>
+      <a class="sidebar-brand brand-logo-mini text-success display-1" style="text-decoration: none;" href="#"><h3>HT</h3></a>
 
     </div>
     <ul class="nav">
@@ -116,6 +116,7 @@ aria-controls="menu-auditor">
 </li>
 {% endif %}
 
+{% if manufaktur %}
 
 {% with url_name=request.resolver_match.url_name %}
 <li class="nav-item menu-items
@@ -148,65 +149,65 @@ aria-controls="menu-auditor">
   </div>
 </li>
 {% endwith %}
-
-
+{% endif %}
+{% if manufaktur %}
 {% with url_name=request.resolver_match.url_name %}
 <li class="nav-item menu-items
-    {% if url_name == 'read_supplier' or url_name == 'create_supplier' or url_name == 'update_supplier' %} active{% endif %}">
-  <a class="nav-link" data-toggle="collapse" href="#menu-supplier"
-     aria-expanded="{% if url_name == 'read_supplier' or url_name == 'create_supplier' or url_name == 'update_supplier' %}true{% else %}false{% endif %}"
-     aria-controls="menu-supplier">
+    {% if url_name == 'read_bahanbaku' or url_name == 'create_bahanbaku' or url_name == 'update_bahanbaku' %} active{% endif %}">
+  <a class="nav-link" data-toggle="collapse" href="#menu-bahanbaku"
+     aria-expanded="{% if url_name == 'read_bahanbaku' or url_name == 'create_bahanbaku' or url_name == 'update_bahanbaku' %}true{% else %}false{% endif %}"
+     aria-controls="menu-bahanbaku">
     <span class="menu-icon"><i class="mdi mdi-cart-outline"></i></span>
-    <span class="menu-title">Supplier</span>
+    <span class="menu-title">Bahan Baku</span>
     <i class="menu-arrow"></i>
   </a>
 
-  <div class="collapse {% if url_name == 'read_supplier' or url_name == 'create_supplier' or url_name == 'update_supplier' %}show{% endif %}" id="menu-supplier">
+  <div class="collapse {% if url_name == 'read_bahanbaku' or url_name == 'create_bahanbaku' or url_name == 'update_bahanbaku' %}show{% endif %}" id="menu-bahanbaku">
     <ul class="nav flex-column sub-menu">
-      <li class="nav-item {% if url_name == 'read_supplier' %}active{% endif %}">
-        <a class="nav-link" href="{% url 'read_supplier' %}">
+      <li class="nav-item {% if url_name == 'read_bahanbaku' %}active{% endif %}">
+        <a class="nav-link" href="{% url 'read_bahanbaku' %}">
           <span><i class="mdi mdi-cards-outline mr-2"></i></span>
-          <span>Data Supplier</span>
+          <span>Data Bahan Baku</span>
         </a>
       </li>
-      {% if auditor or manufaktur %}
-      <li class="nav-item {% if url_name == 'create_supplier' %}active{% endif %}">
-        <a class="nav-link" href="{% url 'create_supplier' %}">
+     
+      <li class="nav-item {% if url_name == 'create_bahanbaku' %}active{% endif %}">
+        <a class="nav-link" href="{% url 'create_bahanbaku' %}">
           <span><i class="mdi mdi-plus mr-2"></i></span>
-          <span>Tambah Supplier</span>
+          <span>Tambah Bahan Baku</span>
         </a>
       </li>
-      {% endif %}
     </ul>
   </div>
 </li>
 {% endwith %}
+{% endif %}
 
 {% with url_name=request.resolver_match.url_name %}
 <li class="nav-item menu-items
-    {% if url_name == 'read_prodsup' or url_name == 'create_prodsup' or url_name == 'update_prodsup' %} active{% endif %}">
-  <a class="nav-link" data-toggle="collapse" href="#prod-sup"
-     aria-expanded="{% if url_name == 'read_prodsup' or url_name == 'create_prodsup' or url_name == 'update_prodsup' %}true{% else %}false{% endif %}"
-     aria-controls="prod-sup">
+    {% if url_name == 'read_detail' or url_name == 'create_detail' or url_name == 'update_detail' %} active{% endif %}">
+  <a class="nav-link" data-toggle="collapse" href="#detail"
+     aria-expanded="{% if url_name == 'read_detail' or url_name == 'create_detail' or url_name == 'update_detail' %}true{% else %}false{% endif %}"
+     aria-controls="detail">
     <span class="menu-icon"><i class="mdi mdi-store"></i></span>
-    <span class="menu-title">Produk-Supplier</span>
+    <span class="menu-title">Detail Produk</span>
     <i class="menu-arrow"></i>
   </a>
 
-  <div class="collapse {% if url_name == 'read_prodsup' or url_name == 'create_prodsup' or url_name == 'update_prodsup' %}show{% endif %}" id="prod-sup">
+  <div class="collapse {% if url_name == 'read_detail' or url_name == 'create_detail' or url_name == 'update_detail' %}show{% endif %}" id="detail">
     <ul class="nav flex-column sub-menu">
-      <li class="nav-item {% if url_name == 'read_prodsup' %}active{% endif %}">
-        <a class="nav-link" href="{% url 'read_prodsup' %}">
+      <li class="nav-item {% if url_name == 'read_detail' %}active{% endif %}">
+        <a class="nav-link" href="{% url 'read_detail' %}">
           <span><i class="mdi mdi-format-list-bulleted mr-2"></i></span>
-          <span>Data Produk-Supplier</span>
+          <span>Data Detail Produk</span>
         </a>
       </li>
       
       {% if manufaktur %}
-      <li class="nav-item {% if url_name == 'create_prodsup' %}active{% endif %}">
-        <a class="nav-link" href="{% url 'create_prodsup' %}">
+      <li class="nav-item {% if url_name == 'create_detail' %}active{% endif %}">
+        <a class="nav-link" href="{% url 'create_detail' %}">
           <span><i class="mdi mdi-plus mr-2"></i></span>
-          <span>Tambah Produk-Supplier</span>
+          <span>Tambah Detail Produk</span>
         </a>
       </li>
       {% endif %}
@@ -238,5 +239,6 @@ aria-controls="menu-auditor">
     </ul>
   </div>  
 </li>
+</ul>
 
   </nav>
