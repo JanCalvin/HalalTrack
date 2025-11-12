@@ -120,6 +120,9 @@ def awal(request):
         list3 = []
         for x in filterprodsup :
             list3.append(x.id_bahanbaku.status_halal)
+        if not list3 :
+            messages.error(request,'Produk Belum Memliki Data yang Lengkap!')
+            return redirect('awal')
     #    MANUF HALAL + SUPPLIER HALAL
         if status_halal_m == 'Halal' and ('Non Halal' not in list3 and 'Belum Halal' not in list3):
             print(1)
@@ -1418,7 +1421,7 @@ def hasil_halal(request) :
         filterumkm = ''
     else : 
         filterumkm = request.GET.get('filterumkm','')
-        if filterumkm : 
+        if not filterumkm : 
             produkobj = models.Produk.objects.all()
         else :
             produkobj = models.Produk.objects.filter(id_manufaktur__username = filterumkm)
@@ -1444,7 +1447,7 @@ def hasil_halal(request) :
         if status_halal_m == 'Halal' and ('Non Halal' not in list3 and 'Belum Halal' not in list3):
             print(1)
             status_produk = 'Halal'
-        
+            catatan = '-'
         #  MANUF HALAL + SUPPLIER NON HALAL
         elif status_halal_m == 'Halal' and 'Non Halal' in list3  :
             print(2)
@@ -1488,8 +1491,9 @@ def hasil_halal(request) :
             status_produk = 'Non Halal'
             catatan = 'Produk tidak halal dan terdapat supplier yang belum tersertifikasi halal'
         print('status prod',status_produk)
-        getproduk.catatan  = catatan
-        getproduk.save()
+        i.catatan = catatan
+        i.save()
+
         list2.append(jumlah_supplier_halal)
         list2.append(status_produk)
         list1.append(list2)
