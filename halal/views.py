@@ -136,13 +136,13 @@ def awal(request):
         #  MANUF HALAL + SUPPLIER BELUM HALAL
         elif status_halal_m == 'Halal' and ('Non Halal'not in list3 and 'Belum Halal' in list3) :
             print(3)
-            status_produk = 'Halal'
+            status_produk = 'Halal dengan catatan!'
             catatan = 'Terdapat supplier yang belum tersertifikasi halal!'
         
         # MANUF BELUM HALAL + SUPPLIER HALAL
         elif status_halal_m == 'Belum Halal' and ('Non Halal'not in list3 and 'Belum Halal' not in list3) :
             print(4)
-            status_produk = 'Halal'
+            status_produk = 'Halal dengan catatan!'
             catatan = 'Mohon segera menerbitkan sertifikasi Halal'
         # MANUF BELUM HALAL + SUPPLIER NON HALAL
         elif status_halal_m == 'Belum Halal' and 'Non Halal' in list3 :
@@ -1456,13 +1456,13 @@ def hasil_halal(request) :
         #  MANUF HALAL + SUPPLIER BELUM HALAL
         elif status_halal_m == 'Halal' and ('Non Halal'not in list3 and 'Belum Halal' in list3) :
             print(3)
-            status_produk = 'Halal'
+            status_produk = 'Halal dengan catatan!'
             catatan = 'Terdapat supplier yang belum tersertifikasi halal!'
         
         # MANUF BELUM HALAL + SUPPLIER HALAL
         elif status_halal_m == 'Belum Halal' and ('Non Halal'not in list3 and 'Belum Halal' not in list3) :
             print(4)
-            status_produk = 'Halal'
+            status_produk = 'Halal dengan catatan!'
             catatan = 'Mohon segera menerbitkan sertifikasi Halal'
         # MANUF BELUM HALAL + SUPPLIER NON HALAL
         elif status_halal_m == 'Belum Halal' and 'Non Halal' in list3 :
