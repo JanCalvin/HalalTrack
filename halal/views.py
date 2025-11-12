@@ -746,7 +746,7 @@ def delete_auditor(request,id) :
 
 '''CRUD admin'''
 @login_required(login_url="login")
-@role_required(['admin'])
+# @role_required(['admin'])
 def read_admin(request) :
    
     user = request.user
@@ -757,7 +757,7 @@ def read_admin(request) :
     return render(request, 'admin/read_admin.html', {'adminobj': adminobj})
 
 @login_required(login_url="login")
-@role_required(['admin'])
+# @role_required(['admin'])
 def create_admin(request):
     # groupobj = Group.objects.all().order_by('name')
     # user = request.user
